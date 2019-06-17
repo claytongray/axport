@@ -40,6 +40,7 @@ This will guide you through installing Node.js, Node Package Manager (NPM), and 
 	```
 	Or, you can drag and drop the folder right into terminal. Type `cd ` into the terminal (with the space) and then drag the folder into the terminal window to get the folder's path. Remember to drag the "service" folder, not the top-level project folder or chrome extension folder.
 3. Now enter `npm install` to automatically install all the dependencies needed for this project via npm. 
+**REMEMBER:** You want to be inside the `screenshoot-service` folder before starting `npm -install`. If you are not, you will get an error asking why there is no package file. 
 
 #### Install the chrome extension
 
