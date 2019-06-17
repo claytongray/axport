@@ -24,7 +24,7 @@ This will guide you through installing Node.js, Node Package Manager (NPM), and 
 
 
 #### Getting this project locally. 
-1. Click download as a ZIP file and unzip somewhere that you'll want your screenshots to live. 
+1. Click Clone Or Download, and select Download ZIP file and unzip where you want the project to live. (you can try to download from this link: [https://github.com/claytongray/axure-screenshoot/archive/master.zip](https://github.com/claytongray/axure-screenshoot/archive/master.zip))
 
 
 #### Install Node, npm
