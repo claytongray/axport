@@ -3,6 +3,7 @@
 # Axure Screenshoot
 
 Take quick single or multiple adaptive view screenshots with headless Chromium.
+ **Note:** This is not a perfect solution. Sometimes you may want to capture screens manually or by using the Screen Capture plugin in chrome. I've found these methods take a while when doing many screenshots and are hard to keep consistent. 
 
 ## Getting Started
 
@@ -11,9 +12,9 @@ The chrome extension will add an overlay in the top right corner of Axshare Prev
 
 ### Prerequisites
 
-You'll need Node.js and Node Package Manager (NPM) installed to run this service. NPM will install all the needed dependencies, including Chromium.
+This was built to work with Axure RP8. I haven't tested it on Axure 9 yet.
 
-This was built with node v10.16.0 and NPM v6.9.0.
+You'll need Node.js and Node Package Manager (NPM) installed to run this service. NPM will install all the needed dependencies, including Chromium. This was built with node v10.16.0 and NPM v6.9.0.
 
 This will require using Terminal commands.
 
@@ -51,6 +52,27 @@ This will guide you through installing Node.js, Node Package Manager (NPM), and 
 The extension is now installed in chrome and the overlay will show up when viewing the local axshare preview.
 
 ![Chrome Output](readme_assets/preview_share.png)
+
+
+## Taking Screenshots
+
+Taking screenshots is easy as clicking the screensize you want. 
+
+> To do: Make the adaptive buttons based on the adaptive views in the left panel.
+
+Open a Axure preview on your local as you normally would. (Clicking "Preview" in Axure for example).
+If the chrome extension is loaded correctly, it will show in the top right of the screen with 4 purple buttons. 
+375, 1024, 1440, and All. By clicking the first three you will get 1 screenshot at that adaptive view.
+If you click All, you will generate 3 screenshots at all three of those sizes.
+
+You'll see your browser load another localhost page. That kicks off the node process to start taking screen shots. Once you're done with the screenshots you can happily close that window. Do NOT refresh that page when you make an update. Axure often versions unique urls to keep your browser from caching pages, so once you use that link, you'll want to close it and start again from the Axshare preview page.
+
+When that starts, it loads an invisible Chromium, opens the page, resizes to the adaptive view size, captures the screen, saves the file, and closes out. This happens multiple times for multiple screenshots and you won't even notice it.
+
+Screenshots are saved in `/screenshoot-service/public/screenshots/`.
+Each adaptive view is stored in their own folder. 
+File names are generated based off of the "Page name" in Axure.
+
 
 ## Errors
 
