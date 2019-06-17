@@ -1,0 +1,35 @@
+/**
+ * Place your custom CSS styles here.
+ **/
+
+#screenshoot_container {
+	position: fixed;
+	top: 0;
+	right: 0;
+	padding: 4px 6px;
+	z-index:9999;
+	background: #ededed;
+}
+
+#screenshoot_container button {
+	background: #9440C5;
+	color: #fff;
+	border: #B62DC0;
+	border-radius: 4px;
+	padding: 4px 8px;
+	margin: 0px 6px 2px 6px;
+}
+
+#screenshot_options {
+	text-align: right;
+}
+
+#fullpage-label input[type="checkbox"] {
+	margin: 0;
+	margin-bottom: 1px;
+	vertical-align: middle;
+}
+
+#fullpage-label {
+	font-size: 14px;
+}

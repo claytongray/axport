@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html class="success">
+  <head>
+    <meta charset="UTF-8">
+    <title>Screenshot: <%= filename %></title>
+    <link href="css/bulma.min.css" text="text/css" rel="stylesheet" />
+    <link href="css/styles.css" text="text/css" rel="stylesheet" />
+  </head>
+  <body>
+  	<section class="section">
+  	    <div class="container">
+          <div id="page-actions">
+            <button class="button is-medium" onclick="window.close();">Close Window</button>
+          </div>
+  	      <h1 class="title">
+  	        Success
+  	      </h1>
+
+          <% if (viewports.length == 1 && viewports[0] == "mobile") { %>
+
+          <div class="columns">
+            <div class="column">
+              <a href="screenshots/mobile/<%= filename %>"><img src="screenshots/mobile/<%= filename %>" /></a>
+            </div>
+            <div class="column">
+              <p>
+                <strong><%= filename %></strong>
+              </p>
+              <p>
+                Generated <%= totalShots %> screenshots in <strong><%= time %></strong> seconds.
+              </p>
+              <p>
+                Full Page? <%= fullPage %>
+              </p>
+              <p>
+                <a href="<%= page %>"><%= page %></a>
+              </p>
+            </div>
+          </div>
+
+
+          <% } else { %>
+
+            <article class="message is-success">
+              <div class="message-body">
+                Generated <%= totalShots %> screenshots in <strong><%= time %></strong> seconds
+
+                <p>
+                  Full Page? <%= fullPage %>
+                </p>
+                
+              </div>
+            </article>
+
+            <% viewports.forEach(function (viewport) { %>
+              <div class="screenshot">
+                <a href="screenshots/<%= viewport %>/<%= filename %>"><img src="screenshots/<%= viewport %>/<%= filename %>" /></a><br />
+                <strong><%= viewport %>/<%= filename %></strong>
+              </div>
+            <% }); %>
+
+          <% } %>
+
+
+  	    </div>
+  	  </section>
+
+  </body>
+</html>

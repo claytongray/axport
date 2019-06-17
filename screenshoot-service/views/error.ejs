@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Screenshot: </title>
+    <link href="css/bulma.min.css" text="text/css" rel="stylesheet" />
+    <link href="css/styles.css" text="text/css" rel="stylesheet" />
+  </head>
+  <body>
+  	<section class="section">
+  	    <div class="container">
+  	      <h1 class="title">
+  	        Error
+  	      </h1>
+
+          <div class="notification is-warning">
+            <p><%= error %></p>
+            <p>Generation time: <strong><%= time %></strong> seconds</p>
+          </div>
+
+  	      <p>
+            page: <a href="<%= page %>"><%= page %></a>
+  	      </p>
+          <p>
+            filename: <strong><%= filename %></strong>
+          </p>
+  	    </div>
+  	  </section>
+
+  </body>
+</html>

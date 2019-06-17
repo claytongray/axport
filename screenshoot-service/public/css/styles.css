@@ -1,0 +1,19 @@
+p {
+	margin-bottom: 10px;
+}
+
+html.success {
+	background: #e2eae3;
+}
+
+.screenshot {
+	margin-bottom: 30px;
+}
+
+.screenshot img {
+	max-width: none;
+}
+
+#page-actions {
+	float: right;
+}
