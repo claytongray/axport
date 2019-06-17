@@ -58,8 +58,6 @@ The extension is now installed in chrome and the overlay will show up when viewi
 
 Taking screenshots is easy as clicking the screensize you want. 
 
-> To do: Make the adaptive buttons based on the adaptive views in the left panel.
-
 Open a Axure preview on your local as you normally would. (Clicking "Preview" in Axure for example).
 If the chrome extension is loaded correctly, it will show in the top right of the screen with 4 purple buttons. 
 375, 1024, 1440, and All. By clicking the first three you will get 1 screenshot at that adaptive view.
@@ -84,3 +82,7 @@ Axure isn't running.
 
 #### After clicking a viewport size, my tries for a while and I see a nice error screen that says ERR TIMEOUT30000
 Axure took too long. Hit refresh on that page.
+
+#### TO DO
+
+  * Make the adaptive buttons based on the adaptive views in the left panel.
