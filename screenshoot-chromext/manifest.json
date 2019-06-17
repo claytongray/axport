@@ -28,7 +28,7 @@
   "content_scripts": [
     {
       "matches": [
-        "http://127.0.0.1:32767/start.html"
+        "http://127.0.0.1:*/start.html"
       ],
       "css": [
         "src/inject/inject.css"
@@ -36,7 +36,7 @@
     },
     {
       "matches": [
-        "http://127.0.0.1:32767/start.html"
+        "http://127.0.0.1:*/start.html"
       ],
       "js": [
         "src/inject/inject.js"
