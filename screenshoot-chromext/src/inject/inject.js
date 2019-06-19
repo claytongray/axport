@@ -10,6 +10,7 @@ chrome.extension.sendMessage({}, function(response) {
 		//append all elements
 		document.body.appendChild( div );
 
+
 		//set attributes for div
 		div.id = 'screenshoot_container';
 		div.innerHTML = "<strong>Screenshot:</strong>";
@@ -65,6 +66,20 @@ chrome.extension.sendMessage({}, function(response) {
 			chrome.storage.sync.set({ fullpage: e.target.checked });
 		});
 
+
+		// add hiding and showing to match the column.
+		var hideButton = document.getElementById('interfaceControlFrameMinimizeButton');
+		hideButton.addEventListener('click', function (e) {
+			div.style.display = "none";
+		});
+
+		// show the panel again. This button lives inside of an iframe.
+		var showIframe = document.getElementById('expandFrame');
+		showIframe.contentDocument.getElementById('maximizePanel').addEventListener('click', function (e) { 
+			div.style.display = "block"; 
+		});
+
+
 		// var fpcb = document.createElement('input');
 		// fpcb.id = "fullpage_checkbox";
 		// fpcb.type = "checkbox";
@@ -81,6 +96,23 @@ chrome.extension.sendMessage({}, function(response) {
 			// console.log(e.currentTarget);
 
 			if (document.getElementById("sitemapLinkWithPlayer")) {
+
+
+
+				// get global variables
+				var frameUrl = document.getElementById('mainFrame').contentWindow.location.href;
+				var globalVars = "";
+				var parts = frameUrl.split("#");
+				console.log(frameUrl);
+				console.log(parts);
+				if (parts.length > 1) {
+					// we have some global variables
+					globalVars = parts[1];
+				}
+
+
+				// get secret link 
+				// this is the unique static page that is just the screen
 				var secretLink =  document.getElementById("sitemapLinkWithPlayer").value;
 
 				// console.log("secretLink", secretLink);
@@ -91,7 +123,8 @@ chrome.extension.sendMessage({}, function(response) {
 					filename = document.getElementsByClassName('sitemapHighlight')[0].getElementsByClassName('sitemapPageName')[0].innerHTML;
 				}
 
-				var href = "http://localhost:3000/?page="+secretLink;
+				// construct the base url and add on the global variables from above.
+				var href = "http://localhost:3000/?page="+secretLink+"&globalVars="+encodeURIComponent(globalVars);
 
 				if (e.target.id == "screenshot_button_375") {
 					href = href+"&viewport_mobile=true";

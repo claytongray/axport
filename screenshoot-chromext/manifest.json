@@ -28,7 +28,8 @@
   "content_scripts": [
     {
       "matches": [
-        "http://127.0.0.1:*/start.html"
+        "http://127.0.0.1:*/start.html",
+        "https://*.axshare.com/"
       ],
       "css": [
         "src/inject/inject.css"
@@ -36,7 +37,8 @@
     },
     {
       "matches": [
-        "http://127.0.0.1:*/start.html"
+        "http://127.0.0.1:*/start.html",
+        "https://*.axshare.com/"
       ],
       "js": [
         "src/inject/inject.js"

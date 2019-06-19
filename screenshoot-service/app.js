@@ -97,9 +97,13 @@ app.get("/", (req, res, next) => {
 
 	// var response = {'response':'nothing', page: req.query.page};
 	var page = req.query.page;
+    var globalVars = req.query.globalVars;
     var mobile = req.query.viewport_mobile || true;
     var desktop = req.query.viewport_desktop || false;
     var desktop_big = req.query.viewport_desktop_big || false;
+
+    // tack on the global variables
+    page = page+"#"+globalVars;
 
     // fullpage default
     var fullPage = true;

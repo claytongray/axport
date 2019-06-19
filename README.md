@@ -77,12 +77,18 @@ File names are generated based off of the "Page name" in Axure.
 #### After clicking a viewport size, my browser instantly says connection refused.
 The node.js screenshot service probably isn't running. Make sure your terminal is open and the node service is running. 
 
-#### After clicking a viewport size, my tries for a while and I see a nice error screen that says ERR CONN REFUSED
+#### After clicking a viewport size, my browser tries for a while and I see a nice error screen that says ERR CONN REFUSED
 Axure isn't running. 
 
-#### After clicking a viewport size, my tries for a while and I see a nice error screen that says ERR TIMEOUT30000
+#### After clicking a viewport size, my browser tries for a while and I see a nice error screen that says ERR TIMEOUT30000
 Axure took too long. Hit refresh on that page.
 
 #### TO DO
 
-  * Make the adaptive buttons based on the adaptive views in the left panel.
+  [X] Read global variables from the frame on start.html and bring those to the ghost page.
+  [X] Allow hiding of the panel
+  [ ] Make the adaptive buttons based on the adaptive views in the left panel.  
+  [ ] Make compatible with public axshare.
+  	[ ] Allow for password entry so the ghost chrome can access prototype 
+
+
