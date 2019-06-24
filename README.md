@@ -87,6 +87,8 @@ Axure took too long. Hit refresh on that page.
 
   [X] Read global variables from the frame on start.html and bring those to the ghost page.
   [X] Allow hiding of the panel
+  [ ] Account for missing left nav item (in the case of a new page)
+  [ ] Add support for multiple screenshots with checkboxes
   [ ] Make the adaptive buttons based on the adaptive views in the left panel.  
   [ ] Make compatible with public axshare.
   	[ ] Allow for password entry so the ghost chrome can access prototype 

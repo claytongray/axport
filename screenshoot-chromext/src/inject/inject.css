@@ -33,3 +33,7 @@
 #fullpage-label {
 	font-size: 14px;
 }
+
+input[type="checkbox"].selectNode {
+	margin-left: -10px;
+}

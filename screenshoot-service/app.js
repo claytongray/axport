@@ -1,7 +1,21 @@
 var express = require("express");
+// var cors = require('cors');
 var app = express();
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
+
+// const cors = (req, res, next) => {
+
+//     res.header("Access-Control-Allow-Origin", "*");
+//     res.header("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE");
+//     res.header("Access-Control-Allow-Headers", "Origin, Content-Type");
+
+//     next();
+// };
+
+
+// app.use(cors);
+// app.use(express.json());
 
 const puppeteer = require('puppeteer');
 const devices = require('puppeteer/DeviceDescriptors');
@@ -101,6 +115,7 @@ app.get("/", (req, res, next) => {
     var mobile = req.query.viewport_mobile || true;
     var desktop = req.query.viewport_desktop || false;
     var desktop_big = req.query.viewport_desktop_big || false;
+    var multiple = req.query.multiple || false;
 
     // tack on the global variables
     page = page+"#"+globalVars;
@@ -126,17 +141,23 @@ app.get("/", (req, res, next) => {
     if (desktop) { viewports.push('desktop'); }
     if (desktop_big) { viewports.push('desktop_big'); }
 
-        console.log(viewports);
+    console.log(viewports);
 
+    // if (multiple) {
 
-    if (req.query.filename) {
+    // } else {
+
+    // }
+
+    if (req.query.filename && req.query.filename != "") {
         filename = decodeURIComponent((req.query.filename + '').replace(/\+/g, '%20'));
     } else {
         // try to make a better looking filename
-		filename = page.match(/([^\/]+)(?=\.\w+$)/gm).toString();
+        filename = page.match(/([^\/]+)(?=\.\w+$)/gm).toString();
         filename = replaceAll(filename, "_", " ");
         filename = toTitleCase(filename);
     }
+
 	
     // res.json({mobile: mobile, desktop: desktop, desktop_big: desktop_big, page: page, filename: filename+'.png'});
 
@@ -144,6 +165,30 @@ app.get("/", (req, res, next) => {
 	screenshot_a_link(page, filename, res, viewports, fullPage);
 
     // res.send("test");
+
+});
+
+app.post("/multiple", (req, res, next) => {
+
+    res.header("Access-Control-Allow-Origin", "*");
+    // res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.header("Access-Control-Allow-Headers", "Origin, Content-Type");
+
+    // var fs = require("fs");
+
+    // fs.readFile("temp.txt", function(err, buf) {
+    //   console.log(buf.toString());
+    // });
+    console.log(req.body);
+
+    res.send(req.body);
+
+
+});
+
+app.get("/multiple", (req, res, next) => {
+    
+    res.render("success_multiple", {});
 
 });
 
