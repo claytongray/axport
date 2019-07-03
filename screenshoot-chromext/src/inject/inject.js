@@ -48,6 +48,10 @@ chrome.extension.sendMessage({}, function(response) {
 		optDiv.id = "screenshot_options";
 		div.appendChild(optDiv);
 
+		// waitTime
+
+		$('#screenshot_options').append('<input id="screenshoot_waitTime" type="text" placeholder="200" value="200" title="Wait milliseconds until capture" />')
+
 
 		/* Full page checkbox */
 
@@ -226,6 +230,11 @@ chrome.extension.sendMessage({}, function(response) {
 					var fullpage = document.getElementById('fullpage_checkbox');
 					if (!fullpage.checked) {
 						href = href+"&fullpage=false";
+					}
+
+					var waitTime = $('#screenshoot_waitTime').val();
+					if (waitTime != "") {
+						href = href+"&wait="+waitTime;
 					}
 
 					if (filename) {

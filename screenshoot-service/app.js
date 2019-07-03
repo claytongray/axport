@@ -20,17 +20,18 @@ app.use(express.static(__dirname + '/public'));
 const puppeteer = require('puppeteer');
 const devices = require('puppeteer/DeviceDescriptors');
 
-let viewport_sizing = {
+let viewport_sizing_device_size = {
     "mobile": { width: 375, height: 667 },
     "desktop": { width: 1024, height: 768 },
     "desktop_big": { width: 1440, height: 768 }
 };
 
-
-async function screenshot_a_link(secretLink, filename, res, viewports, fullPage) {
+async function screenshot_a_link(secretLink, filename, res, viewports, fullPage, waitTime) {
   console.log("screenshot_a_link");
   console.log(secretLink);
   var timerStart = Date.now();
+
+  var viewport_sizing = viewport_sizing_device_size;
 
 
     let browser = await puppeteer.launch({ headless: true });
@@ -51,8 +52,48 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage)
 
             await page2.goto(secretLink)
 
+            console.log("waitTime", waitTime);
+
             await page2.waitForSelector('body');
-            await page2.waitFor(500);
+            // await page2.waitForNavigation('domcontentloaded');
+
+            await page2.waitFor(Number(waitTime));
+
+
+
+            /* True Full Page
+            
+                Since some page behave oddly when you resize them, we have to create a perfectly sized page first
+                1. So we load the page, let the DOM load, find out the document height.
+                2. Then reload with the document height set. 
+                This ensures the page loads without any need for resizing.
+
+            */
+
+            if (fullPage) {
+
+                // get document height, we'll use that for the reload.
+
+                var documentHeight = await page2.evaluate(() => {
+                   return document.documentElement.scrollHeight; 
+                });
+
+                viewport_sizing[ viewportName ].height = documentHeight;
+
+                console.log(" viewport_sizing[ viewportName ]",  viewport_sizing[ viewportName ]);
+
+                // Set the new viewport based on that. 
+                await page2.setViewport( viewport_sizing[ viewportName ] );
+
+                // Reload
+                await page2.reload(secretLink);
+
+                // Wait
+                await page2.waitForSelector('body');
+                await page2.waitFor(Number(waitTime));
+
+            }
+
 
             var folder;
             
@@ -116,6 +157,7 @@ app.get("/", (req, res, next) => {
     var desktop = req.query.viewport_desktop || false;
     var desktop_big = req.query.viewport_desktop_big || false;
     var multiple = req.query.multiple || false;
+    var waitTime = req.query.wait || 1000;
 
     // tack on the global variables
     page = page+"#"+globalVars;
@@ -153,7 +195,7 @@ app.get("/", (req, res, next) => {
         filename = decodeURIComponent((req.query.filename + '').replace(/\+/g, '%20'));
     } else {
         // try to make a better looking filename
-        filename = page.match(/([^\/]+)(?=\.\w+$)/gm).toString();
+        filename = req.query.page.match(/([^\/]+)(?=\.\w+$)/gm).toString();
         filename = replaceAll(filename, "_", " ");
         filename = toTitleCase(filename);
     }
@@ -162,7 +204,7 @@ app.get("/", (req, res, next) => {
     // res.json({mobile: mobile, desktop: desktop, desktop_big: desktop_big, page: page, filename: filename+'.png'});
 
 
-	screenshot_a_link(page, filename, res, viewports, fullPage);
+	screenshot_a_link(page, filename, res, viewports, fullPage, waitTime);
 
     // res.send("test");
 
