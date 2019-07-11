@@ -42,6 +42,8 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage,
         // "mobile", "desktop", "desktop_big"
         var viewportName = viewports[i];
 
+        console.log("height",  viewport_sizing[ viewportName ].height);
+
         // set the viewport based on which viewport we're doing now.
         await page2.setViewport( viewport_sizing[ viewportName ] );
 
@@ -59,7 +61,7 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage,
 
             await page2.waitFor(Number(waitTime));
 
-
+            console.log("are we doing a full page?", fullPage);
 
             /* True Full Page
             
@@ -78,12 +80,14 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage,
                    return document.documentElement.scrollHeight; 
                 });
 
-                viewport_sizing[ viewportName ].height = documentHeight;
+                var newHeight = documentHeight;
 
                 console.log(" viewport_sizing[ viewportName ]",  viewport_sizing[ viewportName ]);
+                console.log(" new height",  newHeight);
 
                 // Set the new viewport based on that. 
-                await page2.setViewport( viewport_sizing[ viewportName ] );
+
+                await page2.setViewport( { width: viewport_sizing[ viewportName ].width, height: newHeight} );
 
                 // Reload
                 await page2.reload(secretLink);
