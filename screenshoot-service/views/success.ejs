@@ -20,7 +20,7 @@
 
           <div class="columns">
             <div class="column">
-              <a href="screenshots/mobile/<%= filename %>"><img src="screenshots/mobile/<%= filename %>" /></a>
+              <a href="screenshots/mobile/<%= filename %>" download><img src="screenshots/mobile/<%= filename %>" /></a>
             </div>
             <div class="column">
               <p>
@@ -34,6 +34,9 @@
               </p>
               <p>
                 <a href="<%= page %>"><%= page %></a>
+              </p>
+              <p>
+                <a href="screenshots/mobile/<%= filename %>" class="button is-medium" download>Download</a>
               </p>
             </div>
           </div>
