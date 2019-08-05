@@ -3,6 +3,12 @@ chrome.extension.sendMessage({}, function(response) {
 	if (document.readyState === "complete") {
 		clearInterval(readyStateCheckInterval);
 
+		// scroll to current page (just for fun)
+		if ($('.sitemapHighlight').length > 0) {
+			$('#sitemapTreeContainer').scrollTop( $('.sitemapHighlight').offset().top-160 );
+		}
+
+
 		// $('body').append('<div style="position:fixed; top:0; right:0;"><a href="'+secretLink+'">TEST</a></div>');
 
 		var div = document.createElement( 'div' );

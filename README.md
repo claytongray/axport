@@ -5,6 +5,16 @@
 Take quick single or multiple adaptive view screenshots with headless Chromium.
  **Note:** This is not a perfect solution. Sometimes you may want to capture screens manually or by using the Screen Capture plugin in chrome. I've found these methods take a while when doing many screenshots and are hard to keep consistent. 
 
+## Features
+  * Single click screenshots from the Axure RP8 web preview page
+  * Take screenshots with multiple viewport sizes at the same time
+  * Smart full-page screenshots that measure the page and then resizes the viewport based on the elements on the page.
+  * Screenshots take in account any global variables set on previous pages
+  * File naming based on page name in Axure
+  * Set a custom wait time to allow for any page load animations
+  * Jumps the left menu to the current page on load for long left site maps
+
+
 ## Getting Started
 
 This folder contains both a chrome extension and node/express project. 
@@ -19,31 +29,52 @@ You'll need Node.js and Node Package Manager (NPM) installed to run this service
 This will require using Terminal commands.
 
 
-### Installing
+### Installing (4 parts)
 
 This will guide you through installing Node.js, Node Package Manager (NPM), and the chrome extension.
 
 
-#### Getting this project locally. 
+#### Part 1: Getting this project locally. 
 1. Click Clone Or Download, and select Download ZIP file and unzip where you want the project to live. (you can try to download from this link: [https://github.com/claytongray/axure-screenshoot/archive/master.zip](https://github.com/claytongray/axure-screenshoot/archive/master.zip))
 
 
-#### Install Node, npm
+#### Part 2: Install Node, npm
 1. Download and install node.js from their website: [https://nodejs.org/en/download/](https://nodejs.org/en/download/).
 2. NPM comes with Node.js so you're ready to go with both of those. To check if it worked, open terminal and type `node -v`. That should return your Node.js version. `npm -v` should return the npm version.
 
 
-#### Install node modules, including Puppeteer/Chromium
+#### Part 3: Install node modules, including Puppeteer/Chromium
 1. Open terminal. 
 2. Open the screenshoot-service directory. So if the project folder is located on my deskop it would type:
 	```
 	cd /Users/clayton/Desktop/axure-screenshoot/screenshoot-service
 	```
 	Or, you can drag and drop the folder right into terminal. Type `cd ` into the terminal (with the space) and then drag the folder into the terminal window to get the folder's path. Remember to drag the "service" folder, not the top-level project folder or chrome extension folder.
-3. Now enter `npm install` to automatically install all the dependencies needed for this project via npm. 
-**REMEMBER:** You want to be inside the `screenshoot-service` folder before starting `npm -install`. If you are not, you will get an error asking why there is no package file. 
+3. Now enter 
+  ```
+  npm install
+  ``` 
+  in the screenshoot-service directory to automatically install all the dependencies needed for this project via npm. 
+  
+  **REMEMBER:** You want to be inside the `screenshoot-service` folder before starting `npm -install`. If you are not, you will get an error asking why there is no package file. 
 
-#### Install the chrome extension
+4. Create folders for your screenshots in the `screenshoot-service/public/` folder like so:
+  ```
+  screenshoot-service/public/screenshots/mobile/
+  screenshoot-service/public/screenshots/desktop/
+  screenshoot-service/public/screenshots/desktop_big/
+  ```
+  > Side note: I couldn't figure out how to configure my gitignore to keep the folders but ignore everything in them. I found some solutions just didn't experiment with them. So this is why you have to create the directories yourself.
+
+5. Run the node service by entering
+  ```
+  node app.js
+  ```
+  in the screenshoot-service directory to start the service. 
+  If it succeeded, you should see the output:
+  > `Server running on port 3000`
+
+#### Part 4: Install the chrome extension
 
 1. Go to [chrome://extensions/](chrome://extensions/)
 2. In the top right, turn on "Developer mode" by clicking the toggle switch.
@@ -76,6 +107,11 @@ File names are generated based off of the "Page name" in Axure.
 
 #### After clicking a viewport size, my browser instantly says connection refused.
 The node.js screenshot service probably isn't running. Make sure your terminal is open and the node service is running. 
+Run the node service by entering
+  ```
+  node app.js
+  ```
+in the screenshoot-service directory to start the service.
 
 #### After clicking a viewport size, my browser tries for a while and I see a nice error screen that says ERR CONN REFUSED
 Axure isn't running. 
@@ -85,12 +121,15 @@ Axure took too long. Hit refresh on that page.
 
 #### TO DO
 
-  [X] Read global variables from the frame on start.html and bring those to the ghost page.
-  [X] Allow hiding of the panel
-  [ ] Account for missing left nav item (in the case of a new page)
-  [ ] Add support for multiple screenshots with checkboxes
-  [ ] Make the adaptive buttons based on the adaptive views in the left panel.  
-  [ ] Make compatible with public axshare.
-  	[ ] Allow for password entry so the ghost chrome can access prototype 
+  * [X] Read global variables from the frame on start.html and bring those to the ghost page.
+  * [X] Allow hiding of the panel
+  * [X] Jump to the current page on the left panel
+  * [ ] Account for missing left nav item (in the case of a new page)
+  * [ ] Add support for multiple screenshots with checkboxes
+  * [ ] Make the adaptive buttons based on the adaptive views in the left panel. 
+  * [-] Make compatible with public axshare.  
+      * [ ] Allow for password entry so the ghost chrome can access prototype 
+
+[X] = Done
 
 
