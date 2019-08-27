@@ -3,192 +3,540 @@ chrome.extension.sendMessage({}, function(response) {
 	if (document.readyState === "complete") {
 		clearInterval(readyStateCheckInterval);
 
-		// scroll to current page (just for fun)
-		if ($('.sitemapHighlight').length > 0) {
-			$('#sitemapTreeContainer').scrollTop( $('.sitemapHighlight').offset().top-160 );
-		}
-
-
-		// $('body').append('<div style="position:fixed; top:0; right:0;"><a href="'+secretLink+'">TEST</a></div>');
-
-		var div = document.createElement( 'div' );
-
-		//append all elements
-		document.body.appendChild( div );
-
-
-		//set attributes for div
-		div.id = 'screenshoot_container';
-		div.innerHTML = '<strong class="directive">Screenshot this page:</strong><br />';
-
-		// Screenshot Button - 375
-		var button375 = document.createElement( 'button' );
-		button375.id="screenshot_button_375";
-		button375.setAttribute('data-size', '375');
-		button375.innerHTML = "375";
-		div.appendChild( button375 );
-
-		// Screenshot Button - 1024
-		var button1024 = document.createElement( 'button' );
-		button1024.id="screenshot_button_1024";
-		button1024.setAttribute('data-size', '1024');
-		button1024.innerHTML = "1024";
-		div.appendChild( button1024 );
-
-		// Screenshot Button - 1440
-		var button1440 = document.createElement( 'button' );
-		button1440.id="screenshot_button_1440";
-		button1440.setAttribute('data-size', '1440');
-		button1440.innerHTML = "1440";
-		div.appendChild( button1440 );
-
-		// Screenshot Button - All
-		var buttonAll = document.createElement( 'button' );
-		buttonAll.id="screenshot_button_all";
-		buttonAll.setAttribute('data-size', 'all');
-		buttonAll.innerHTML = "All";
-		div.appendChild( buttonAll );
-
-		// options
-		var optDiv = document.createElement('div');
-		optDiv.id = "screenshot_options";
-		div.appendChild(optDiv);
-
-		// waitTime
-
-		$('#screenshot_options').append('<input id="screenshoot_waitTime" type="text" placeholder="200" value="200" title="Wait milliseconds until capture" />')
-
-
-		/* Full page checkbox */
-
-		// full page checkbox
-		var fplabel = document.createElement('label');
-		fplabel.id = "fullpage-label";
-
-		// add the fullpage checkbox
-		fplabel.innerHTML = '<input type="checkbox" value="true" id="fullpage_checkbox" /> Full Page';
-		optDiv.appendChild(fplabel);
-
-		// update checkbox state
-		chrome.storage.sync.get('fullpage', function(data) {
-			console.log("get checked status", data, data.fullpage);
-		    document.getElementById('fullpage_checkbox').checked = data.fullpage;
-		});
-
-		var fpcb = document.getElementById('fullpage_checkbox');
-
-		fpcb.addEventListener('change', function (e) {
-			console.log("change");
-			console.log(e.target.checked);
-			chrome.storage.sync.set({ fullpage: e.target.checked });
-		});
-
-
-		/* Hide / Show Panel */
-
-		// add hiding and showing to match the column.
-		var hideButton = document.getElementById('interfaceControlFrameMinimizeButton');
-		hideButton.addEventListener('click', function (e) {
-			div.style.display = "none";
-		});
-
-		// show the panel again. This button lives inside of an iframe.
-		var showIframe = document.getElementById('expandFrame');
-		showIframe.contentDocument.getElementById('maximizePanel').addEventListener('click', function (e) { 
-			div.style.display = "block"; 
-		});
+		var settingsHtml = '<strong>Screenshooting Settings</strong><br />'
+		+ '	<p class="showOption withSelect">'
+		+ '		<span class="label">Screenshot size</span><br />'
+		+ '		<select class="" id="screenshoot-setting-adaptiveview" data-settingId="adaptiveView"></select>'
+		+ '		<span class="helper-text">Either an adaptive view (if any) or the custom size below</span>'
+		+ ' </p>'
+		+ '	<p class="showOption withCheckbox" id="screenshoot-setting-fullpage-group">'
+		+ '		<span class="overflowOptionCheckbox" id="screenshoot-setting-fullpage" data-settingId="fullpage"><input type="checkbox" id="screenshoot-checkbox-fullpage" /></span>'
+		+ '		<span class="label">Full page height</span><br />'
+		+ '		<span class="helper-text">Use height of page instead height of adaptive view.</span>'
+		+ ' </p>'
+		+ '	<p class="showOption withCheckbox">'
+		+ '		<span class="overflowOptionCheckbox" id="screenshoot-setting-useVarsInFilename" data-settingId="useVarsInFilename"><input type="checkbox" id="screenshoot-checkbox-useGlobalVars" /></span>'
+		+ '		<span class="label">Global vars in filename</span><br />'
+		+ '		<span class="helper-text">Include global variables in the filename.</span>'
+		+ ' </p>'
+		+ '	<p class="showOption withText">'
+		+ '		<span class="label">Wait time</span><br />'
+		+ '		<input type="number" class="" id="screenshoot-setting-waittime" placeholder="Wait time (milliseconds)" value="" data-settingId="waitTime" />'
+		+ '		<span class="helper-text">How many milliseconds to wait after page load to take the screenshot.</span>'
+		+ ' </p>'
+		+ '	<p class="showOption withText">'
+		+ '		<span class="label">Custom w x h</span><br />'
+		+ '		<input type="number" class="small-number" id="screenshoot-setting-customWidth" placeholder="width" value="" data-settingId="customWidth" /> x'
+		+ '<input type="number" class="small-number" id="screenshoot-setting-customHeight" placeholder="height" value="" data-settingId="customHeight" />'
+		+ '		<span class="helper-text">What width x height (pixels) to use when there is no adaptive view setup.</span>'
+		+ ' </p>';
 
 
 
-		/* Individual Page Checkboxes */
 
-		$('.sitemapNode.sitemapLeafNode .sitemapPageLinkContainer').each(function (i, leafNode) {
-			$(leafNode).prepend('<input type="checkbox" value="'+ $(leafNode).find('.sitemapPageLink').attr('nodeurl') +'" class="selectNode" />');
-		});
 
-		// update link
-		$('.selectNode').click(function (e) {
-			var checked = $('.selectNode:checked');
 
-			if (checked.length > 0) {
-				$('#screenshoot_container .directive').text('Screenshot ('+checked.length+') pages:');
-			} else {
-				$('#screenshoot_container .directive').text('Screenshot this page:');
+		$(document).ready(function (e) {
+
+			// whether to use ajax to do multiple screenshots
+			var ajaxMultiple = false;
+
+			// Axure version (equals either 8 or 9)
+			var axureVersion = 8;
+
+			if ($('#topPanel').length > 0) {
+				axureVersion = 9;
 			}
 
-		});
+			// are there adaptive views on this page?
+			var adaptiveViewsActive = false;
+
+			// pattern we'll use to get the adaptive info from the dropdown
+			var adaptiveViewRegex = /\(([0-9]*) \x ([a-z,0-9]*)/;
+
+			// what the iframe link is.
+			// We'll use this to check if the iframe is completed loading a new page or not.
+			var iframeLink = "";
+
+			// Axure 8 only, 
+			// Default size for "Base"
+			var ax8_baseSizes = {width: 375, height: 667};
+
+			// User settings set in chrome
+			var settings = {
+				fullpage: false,
+				waitTime: 200,
+				useVarsInFilename: false,
+				adaptiveView: {width: "default", height: "default"},
+				scrollToPage: true,
+				ax8_baseSizes: ax8_baseSizes,
+				customSize: {width: 375, height: 667}
+			}
 
 
-		// var fpcb = document.createElement('input');
-		// fpcb.id = "fullpage_checkbox";
-		// fpcb.type = "checkbox";
-		// fpcb.value = "true";
-		// fpcb.checked = true;
-		// fplabel.appendChild(fpcb);
 
-		function viewportButtonClick(e) {
-			// get filename
-			// get secret link
-
-			// console.log(e);
-			// console.log(e.target);
-			// console.log(e.currentTarget);
-
-			/* Multiple Screenshots? */
-			var checked = $('.selectNode:checked');
-
-			if (checked.length > 88) {
-				// a lot of screenshots
-				/*
-				// with multiple, we just ajax over to our service and wait for a url back.
-				$('#screenshoot_container .directive').text("Loading...");
-				// $('#screenshoot_container button').prop('disabled', true);
-
-				var checkedNodes = [];
-				checked.each(function (i, checkbox) {
-					checkedNodes.push( $(checkbox).val() );
-				});
-
-				console.log("checkedNodes", checkedNodes);
-
-				var url = "http://localhost:3000/multiple";
-				var data = {
-					'size': e.target.getAttribute('data-size'),
-					'fullPage': (document.getElementById('fullpage_checkbox').checked),
-					'nodes': checkedNodes
-				};
-
-				// chrome.runtime.sendMessage({contentScriptQuery: "multiSelect", data:data});
+			function syncSettings () {
+				chrome.storage.sync.set({ ScreenshootSettings : settings });
+				console.log("settings synced", settings);
+			}
 
 
-					console.log("fire the ajax");
+			function toggleDropdownCheckboxes(el) {
+				var settingName;
+				var checked;
 
-					$.ajax({
-						type: "POST",
-						url: url,
-						// mode: "cors",
-						crossDomain: true,
-						data: JSON.stringify(data),
-						dataType: "json"
-					})
-					.done(function (msg) {
-						console.log("message:" , msg);
-					})
-					.fail(function (jqxhr, textStatus) {
-					  // alert( "Request failed: " + textStatus );
-					  console.log(textStatus);
-					})
-					.always(function(var1, var2) {
-						console.log("always", var1, var2);
-					});
+				if (axureVersion >= 9) {
+					settingName = $(el).attr('data-settingId');
+					checked = ($(el).hasClass('selected'));
+				} else {
+					settingName = $(el).parent().attr('data-settingId');
+					checked = (!$(el).prop('checked'));
+				}
 
+				console.log("settingName", settingName);
+				if ( checked ) {
+					// selected, turn off
+					if (axureVersion >= 9) {
+						$(el).removeClass('selected');
+					} else {
+						$(el).prop('checked', '');
+					}
+					settings[settingName] = false;
+				} else {
+					// not selected, turn on
+					if (axureVersion >= 9) {
+						$(el).addClass('selected');
+					} else {
+						$(el).prop('checked', 'checked');
+					}
+					settings[settingName] = true;
+				}
+				syncSettings();
+			}
+
+			function changeSelectedSize(){
+				var width = $('#screenshoot-setting-adaptiveview').find(":selected").attr('data-width');
+				var height = $('#screenshoot-setting-adaptiveview').find(":selected").attr('data-height');
+
+				console.log("new width", width);
+
+				// update button
+				$('#screenshoot-button .viewport-name').text( width );
+
+				// and update the sync settings
+				settings.adaptiveView = {width: width, height: height};
+				syncSettings();
+			}
+
+
+
+			function render() {
+				/* 
+					Render once we have our chrome settings
+					So, if something is set true, mark the checkbox
+					If there is a value, make sure the value is in put in
+					This runs after we get the data back from chrome
+					and we sync our object to those settings
 				*/
 
-			} else {
-				// not as many screenshots
+				/* Build Tool */
 
-				// double check the secret link is available
-				if (document.getElementById("sitemapLinkWithPlayer")) {
+
+				console.log("settings", settings);
+
+
+				if (axureVersion >= 9) {
+					/* AXURE 9 */
+					$('#screenshoot-toolbar-button, #screenshoot-settings').remove();
+
+					$('#inspectControlFrameHeader').append('<li id="screenshoot-toolbar-button">'
+						+ '	<a pluginid="screenshoot" title="Screenshot this page" id="screenshoot-button" class="ax9" style="display: none;"><span class="viewport-name"></span></a>'
+						+ '</li>');
+
+					// Add our icon
+					var imgURL = chrome.extension.getURL("images/screenshot-icon.svg");
+					$('#screenshoot-button').css({'background-image': "url("+imgURL+")"});
+
+					// add settings to the "..." dropdown
+					$('#interfaceScaleListContainer').after('<div id="screenshoot-settings" class="ax9"></div>');
+					$('#screenshoot-settings').append(settingsHtml);
+
+
+					
+
+					/** LISTENERS **/
+
+					// add click listeners for checkboxes
+					$('.showOption.withCheckbox').click(function (e) {
+						toggleDropdownCheckboxes($(e.currentTarget).find('.overflowOptionCheckbox'));
+					});
+
+
+
+				} else {
+					/* AXURE 8 */
+
+					// $('body').append('<div style="position:fixed; top:0; right:0;"><a href="'+secretLink+'">TEST</a></div>');
+
+					$('#screenshoot_container').remove();
+
+					$('#sitemapToolbar').after('<div id="screenshoot_container" class="ax8">'
+						+ '	<div id="screenshoot-buttons">'
+						+ '		<button id="screenshoot-button" style="display: none;"><i id="screenshoot-button-icon"></i> <span class="directive">Screenshot at</span> <span class="viewport-name"></span></button>'
+						+ '		<button id="screenshoot-toggle-settings"><i id="screenshoot-toggle-settings-icon"></i></button>'
+						+ '	</div>'
+						+ '	<div id="screenshoot-settings" class="ax8">'
+						+ 	settingsHtml
+						+ '	</div>'
+						+ '</div>');
+
+					// Add our icons
+					var ssIcon = chrome.extension.getURL("images/screenshot-icon.svg");
+					$('#screenshoot-button-icon').css({'background-image': "url("+ssIcon+")"});
+					var ssGearIcon = chrome.extension.getURL("images/screenshot-gear-icon.svg");
+					$('#screenshoot-toggle-settings-icon').css({'background-image': "url("+ssGearIcon+")"});
+
+
+
+					// scroll to current page (just for fun)
+					if ($('.sitemapHighlight').length > 0 && settings.scrollToPage) {
+						$('#sitemapTreeContainer').scrollTop( $('.sitemapHighlight').offset().top-250 ); //-160
+					}
+
+					// listen for settings checkbox changes
+					$('#screenshoot-settings input[type="checkbox"]').change(function (e) {
+						toggleDropdownCheckboxes($(e.currentTarget));
+					});
+
+					// Add listener to settings toggle
+					$('#screenshoot-toggle-settings').click(function (e) {
+						$('#screenshoot-settings').toggle();
+					});
+
+
+				}	
+
+				// Prototype Password
+
+				// if (liveAxshare) {
+				// 	$('#screenshoot-settings').append('	<p class="showOption withText">'
+				// 	+ '		<span class="label">Prototype password</span><br />'
+				// 	+ '		<input type="password" class="" id="screenshoot-setting-prototypePassword" placeholder="Prototype password" value="" data-settingId="prototypePassword" />'
+				// 	+ ' </p>');
+				// }
+
+
+
+				// add change listener to waitTime
+				$('#screenshoot-setting-waittime').on('blur', function (e) {
+					var val = $(e.currentTarget).val();
+					settings.waitTime = val;
+					syncSettings();
+					$(e.currentTarget).off('keydown', waitTimeKeyboardListener);
+				});
+
+					function waitTimeKeyboardListener(e) {
+						if (e.keyCode == 13) {
+							$(e.currentTarget).blur();
+						}
+					}
+
+					// add change listener to waitTime
+					$('#screenshoot-setting-waittime').on('focus', function (e) {
+						$(e.currentTarget).on('keydown', waitTimeKeyboardListener);
+					});
+
+
+				// Do we have adaptive views?
+				adaptiveViewsActive = false;
+				if ($('.adaptiveViewOption').length > 0) {
+					if (axureVersion >= 9) {
+						if ($('#interfaceAdaptiveViewsContainer').css('display') == "block") {
+							adaptiveViewsActive = true;
+						}
+					} else {
+						// Axure 8
+						if ($('#adaptiveButton').length > 0) {
+							adaptiveViewsActive = true;
+						}
+						
+					}
+				}
+
+				console.log("adaptive views?", adaptiveViewsActive);
+
+				// update setting for full page
+				if (settings.fullpage) {
+					if (axureVersion >= 9) {
+						// Axure 9
+						$('#screenshoot-setting-fullpage').addClass('selected');
+					} else {
+						// Axure 8
+						$('#screenshoot-checkbox-fullpage').prop('checked', 'checked');
+					}
+				}
+
+				// update setting for Global Vars
+				if (settings.useVarsInFilename) {
+					if (axureVersion >= 9) {
+						$('#screenshoot-setting-useVarsInFilename').addClass('selected');
+					} else {
+						// Axure 8
+						$('#screenshoot-checkbox-useGlobalVars').prop('checked', 'checked');
+					}
+				}
+
+				// show waitTime
+				if (settings.waitTime) {
+					$('#screenshoot-setting-waittime').val( settings.waitTime );
+				}
+
+				// Show adaptive view setting if there are adaptive views
+				if (adaptiveViewsActive) {
+
+					// grab all the views that aren't the default one
+					var adaptiveViewWidths = [];
+					var selectedSize;
+					$('.adaptiveViewOption:not([val="auto"])').each( function (i, obj) {
+						// grab the adaptive view text
+						var text = $(obj).text();
+
+						// grab the "val" which we'll check default from
+						var val = $(obj).attr('val');
+
+						// viewport width and height
+						var width;
+						var height;
+						var base = "";
+
+						if (val == "default" && (text.indexOf("Base") > -1)) {	
+							// archive ()
+							// base view, no height given
+							base = " (Base)";
+							if (settings.ax8_baseSizes) {
+								width = settings.ax8_baseSizes.width;
+								height = settings.ax8_baseSizes.height;
+							} else {
+								width = ax8_baseSizes.width;
+								height = ax8_baseSizes.height;
+							}
+						} else {
+							// Grab the widths from the text object
+							var found = text.match(adaptiveViewRegex);
+							width = found[1];
+							height = found[2];
+						}
+
+						// see if we already have this width and height combo
+						if ($('#screenshoot-setting-adaptiveview option[data-width="'+width+'"][data-height="'+height+'"]').length > 0) {
+							return;
+						}
+
+						// Is this viewport selected for the user to screenshot with?
+						// We defer to the settings but if not, we use the default view
+						// to set the height
+
+						var selected = "";
+
+						// no chrome setting (and default?)
+						if (settings.adaptiveView.width == "default" && val == "default") {
+							// select the default object as the selected option
+							selected = " selected";
+
+							// and update the sync settings
+							settings.adaptiveView = {width: width, height: height};
+							syncSettings();
+
+							// update the button
+							$('#screenshoot-button .viewport-name').text( width );
+
+							// set the selected size
+							selectedSize = {width: width, height: height};
+
+						} else if (width == settings.adaptiveView.width && height == settings.adaptiveView.height) {
+							selected = " selected";
+
+							// update the button
+							$('#screenshoot-button .viewport-name').text( width );
+
+
+							// set the selected size 
+							selectedSize = {width: width, height: height};
+
+						}
+
+						// add that text to the array.
+						adaptiveViewWidths.push({width: width, height: height});
+						// add an option to the dropdown
+						$('#screenshoot-setting-adaptiveview').append('<option value="'+width+'x'+height+'"'+selected+' data-width="'+width+'" data-height="'+height+'">'+width+' x '+height+base+'</option>');
+					});
+
+					// add listener to the adaptive dropdown
+					$('#screenshoot-setting-adaptiveview').on('change', function (e) {
+						changeSelectedSize();
+					});
+
+
+
+					// check if none are selected (probably switched projects)
+					if (selectedSize == undefined) {
+						// no adaptive views are selected, probably switched projects
+						// or adaptive views changed and the selected one no longer exists. 
+						// Go back to the default
+						$('#screenshoot-setting-adaptiveview').trigger('change');
+					}
+				}
+
+				// Add the custom size
+				$('#screenshoot-setting-adaptiveview').append('<option value="custom">Custom size ()</option>');
+				// if (settings.customSize == undefined || settings.customSize.width || settings.customSize.height == undefined ) {
+				// 	console.log("undefined");
+				// 	settings.customSize = {width: 375, height: 667};
+				// }
+				$('#screenshoot-setting-customWidth').val(settings.customSize.width);
+				$('#screenshoot-setting-customHeight').val(settings.customSize.height);
+				updateCustomSize();
+
+				function updateCustomSize() {
+					settings.customSize.width = $('#screenshoot-setting-customWidth').val();
+					settings.customSize.height = $('#screenshoot-setting-customHeight').val();
+					$('#screenshoot-setting-adaptiveview option[value="custom"]').attr('data-width', settings.customSize.width).attr('data-height', settings.customSize.height).text('Custom Size ('+settings.customSize.width+'x'+settings.customSize.height+')');
+					changeSelectedSize();
+				}
+				$('#screenshoot-setting-customWidth, #screenshoot-setting-customHeight').blur(function (e) {
+					updateCustomSize();
+				});
+
+
+				// show the button now that we're all linked up.
+				$('#screenshoot-button').show();
+				console.log("show the button");
+
+				// add listener to screenshot button
+				$('#screenshoot-button').click(function (e) {
+					takeScreenshot(e);
+				});
+
+				// update iframe link to new page
+				iframeLink = document.getElementById('mainFrame').contentWindow.location.href;
+
+			} // end render
+
+
+			// Get values from Chrome and render
+			chrome.storage.sync.get('ScreenshootSettings', function(data) {
+				console.log("data", data);
+			    if (data.ScreenshootSettings) {
+			    	settings = data.ScreenshootSettings;
+
+			    	if (settings.adaptiveView == undefined) {
+			    		settings.adaptiveView = {width: "default", height:"default"};
+			    	}
+
+			    } else {
+			    	// let's set the intial settings
+			    	syncSettings();
+			    }
+
+
+			    // update the dom now that we have the settings
+			    render();
+
+			});
+
+			// $(window).on('hashchange', function() {
+			// 	console.log("hashchange");
+			// 	render();
+			// });
+
+			$('#mainFrame').on('load', function (e) {
+				function checkIframeLoaded () {
+					if (iframeLink != document.getElementById('mainFrame').contentWindow.location.href) {
+						// not the same
+						console.log("loaded");
+						clearInterval(checkIframeLoadStatus);
+						render();
+					} else {
+						console.log("not loaded");
+					}
+				}
+				$('#screenshoot-button').hide();
+
+				var checkIframeLoadStatus = setInterval(checkIframeLoaded, 250);
+			});
+
+
+
+			/* Individual Page Checkboxes */
+
+			// pages
+			$('.sitemapNode .sitemapPageLinkContainer').each(function (i, leafNode) {
+				$('.sitemapPageLink', leafNode).before('<input type="checkbox" value="'+ $(leafNode).find('.sitemapPageLink').attr('nodeurl') +'" class="selectNode" />');
+			});
+
+			// expandable section pages
+			// $('.sitemapNode.sitemapExpandableNode .sitemapPageLinkContainer').each(function (i, leafNode) {
+			// 	$(leafNode).prepend('<input type="checkbox" value="'+ $(leafNode).find('.sitemapPageLink').attr('nodeurl') +'" class="selectNode" />');
+			// })
+
+
+			// Page checkbox checked. Now we're in multiple land
+			$('.selectNode').click(function (e) {
+				var checked = $('.selectNode:checked');
+				// e.currentTarget
+
+				if (checked.length > 0) {
+					$('#screenshoot-button .directive').text('Screenshot ('+checked.length+') at');
+				} else {
+					$('#screenshoot_container .directive').text('Screenshot at');
+				}
+
+
+				e.stopPropagation();
+				return false;
+			});
+
+
+			function takeScreenshot(e) {
+				// get filename
+				// get secret link
+
+				/* Multiple Screenshots? */
+				var checked = $('.selectNode:checked');
+
+				// fullpage?
+				var fullpage = false;
+				if (axureVersion >= 9) {
+					// Axure 9
+					fullpage = ($('#screenshoot-setting-fullpage').hasClass('selected'));
+				} else {
+					// Axure 8
+					fullpage = document.getElementById('screenshoot-checkbox-fullpage').checked;
+				}
+
+				// waitTime
+				var waitTime = $('#screenshoot-setting-waittime').val();
+
+
+				var checkedNodes = [];
+				var href = "http://localhost:3000";
+
+				if (checked.length >= 1) {
+					// Multiple
+
+					// set up the link
+					// add this url as the preview page url
+					var previewPageUrl = window.location.href;
+					href += '/multiple?purl='+ previewPageUrl.replace("#", "&");
+
+
+					checked.each(function (i, checkbox) {
+						// checkedNodes.push( $(checkbox).val() );
+						href += '&nodes='+$(checkbox).val();
+					});
+
+				} else {
+					// Single
 
 					// get global variables
 					var frameUrl = document.getElementById('mainFrame').contentWindow.location.href;
@@ -204,9 +552,12 @@ chrome.extension.sendMessage({}, function(response) {
 
 					// get secret link 
 					// this is the unique static page that is just the screen
-					var secretLink =  document.getElementById("sitemapLinkWithPlayer").value;
-
-					// console.log("secretLink", secretLink);
+					if (axureVersion >= 9) {}
+					// var secretLink =  document.getElementById("sitemapLinkWithPlayer").value;
+					var secretLink  = frameUrl;
+					if (secretLink.indexOf("#") > -1) {
+						secretLink = secretLink.split("#")[0];
+					}
 
 					// get filename
 					var filename;
@@ -215,81 +566,58 @@ chrome.extension.sendMessage({}, function(response) {
 					}
 
 					// construct the base url and add on the global variables from above.
-					var href = "http://localhost:3000/?page="+secretLink+"&globalVars="+encodeURIComponent(globalVars);
+					href += "/?page="+secretLink;
 
-					if (e.target.id == "screenshot_button_375") {
-						href = href+"&viewport_mobile=true";
-					}
-
-					if (e.target.id == "screenshot_button_1024") {
-						href = href+"&viewport_mobile=false&viewport_desktop=true";
-					}
-
-					if (e.target.id == "screenshot_button_1440") {
-						href = href+"&viewport_mobile=false&viewport_desktop_big=true";
-					}
-
-					if (e.target.id == "screenshot_button_all") {
-						href = href+"&viewport_mobile=true&viewport_desktop=true&viewport_desktop_big=true";
-					}
-
-					var fullpage = document.getElementById('fullpage_checkbox');
-					if (!fullpage.checked) {
-						href = href+"&fullpage=false";
-					}
-
-					var waitTime = $('#screenshoot_waitTime').val();
-					if (waitTime != "") {
-						href = href+"&wait="+waitTime;
+					if (globalVars) {
+						href = href + "&globalVars="+encodeURIComponent(globalVars);
 					}
 
 					if (filename) {
 						href = href+"&filename="+filename;
 					}
 
-					var multiSelect = false;
-					var checkedNodes = [];
-					if (checked.length > 0) {
-						multiSelect = true;
 
-						href = href + "&multiple=true";
-
-						checked.each(function (i, checkbox) {
-							checkedNodes.push( $(checkbox).val() );
-							href = href + "&cn[]=" + encodeURIComponent($(checkbox).val());
-						});
-
-					}
-
-
-
-					console.log("href", href);
-
-
-					// create link, click it, and remove it.
-					var a = document.createElement( 'a' );
-					div.appendChild( a );
-					a.id ="gotoScreenshot";
-					a.href = href;
-					a.target = "_blank";
-					document.getElementById('gotoScreenshot').click();
-					a.remove();
-
-				} else {
-					alert("Could not find secret link. Please try again.");
 				}
+
+				/* Adaptive stuff */
+				// Send over adaptive view info
+				href = href + "&viewport_width="+settings.adaptiveView.width+"&viewport_height="+settings.adaptiveView.height;
+
+
+
+				// Fullpage
+				if (fullpage) {
+					href = href+"&fullpage=true";
+				} else {
+					href = href+"&fullpage=false";
+				}
+
+				// Wait Time
+				if (waitTime != "") {
+					href = href+"&wait="+waitTime;
+				}
+
+				// Global vars on filename?
+				href += "&useVarsInFilename="+settings.useVarsInFilename;
+
+				// prototype password
+				href += "&prototypePassword=";
+
+
+
+				console.log("href", href);
+
+
+				// create link, click it, and remove it.
+				$('body').append('<a href="'+href+'" target="_blank" style="display:none;" id="gotoscreenshot"></a>');
+				document.getElementById('gotoscreenshot').click();
+				$('#gotoscreenshot').remove();
+				
 			}
 
-			
-		}
-
-		document.getElementById('screenshot_button_375').addEventListener('click', viewportButtonClick);
-		document.getElementById('screenshot_button_1024').addEventListener('click', viewportButtonClick);
-		document.getElementById('screenshot_button_1440').addEventListener('click', viewportButtonClick);
-
-		document.getElementById('screenshot_button_all').addEventListener('click', viewportButtonClick);
 
 
+		}); // end document ready
 
 
 

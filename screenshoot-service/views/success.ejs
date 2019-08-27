@@ -16,15 +16,18 @@
   	        Success
   	      </h1>
 
-          <% if (viewports.length == 1 && viewports[0] == "mobile") { %>
+          <% if (viewports.length == 1) { %>
 
           <div class="columns">
             <div class="column">
-              <a href="screenshots/mobile/<%= filename %>" download><img src="screenshots/mobile/<%= filename %>" /></a>
+              <a href="screenshots/<%= filename %>" download><img src="screenshots/<%= filename %>" /></a>
             </div>
             <div class="column">
               <p>
                 <strong><%= filename %></strong>
+              </p>
+              <p>
+                <strong>Viewport:</strong> <%= viewports[0].width %> x <%= viewports[0].height %> 
               </p>
               <p>
                 Generated <%= totalShots %> screenshots in <strong><%= time %></strong> seconds.

@@ -16,6 +16,31 @@
   	        Success
   	      </h1>
 
+          <article class="message is-success">
+            <div class="message-body">
+              <p>
+                Generated <%= totalShots %> screenshots in <strong><%= time %></strong> seconds.
+              </p>
+              <p>
+                Full Page? <%= fullPage %>
+              </p>
+              <p>
+                <a href="<%= page %>"><%= page %></a>
+              </p>
+              
+            </div>
+          </article>
+
+          <% images.forEach(function (image) { %>
+            <div class="screenshot">
+              <a href="screenshots/<%= image.folder %>/<%= image.filename %>">
+                <img src="screenshots/<%= image.folder %>/<%= image.filename %>" />
+              </a>
+              <br />
+              <strong><%= image.folder %>/<%= image.filename %></strong>
+            </div>
+          <% }); %>
+
   	    </div>
   	  </section>
 

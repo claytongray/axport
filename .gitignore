@@ -1,4 +1,6 @@
 screenshoot-service/node_modules
+screenshoot-service/public/screenshots/*
 screenshoot-service/public/screenshots/desktop
 screenshoot-service/public/screenshots/desktop_big
 screenshoot-service/public/screenshots/mobile
+*.sketch

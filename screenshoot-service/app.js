@@ -1,8 +1,20 @@
+var bodyParser = require('body-parser');
 var express = require("express");
 // var cors = require('cors');
+
 var app = express();
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
+
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// parse application/json
+app.use(bodyParser.json());
+
+
+
 
 // const cors = (req, res, next) => {
 
@@ -20,32 +32,55 @@ app.use(express.static(__dirname + '/public'));
 const puppeteer = require('puppeteer');
 const devices = require('puppeteer/DeviceDescriptors');
 
-let viewport_sizing_device_size = {
-    "mobile": { width: 375, height: 667 },
-    "desktop": { width: 1024, height: 768 },
-    "desktop_big": { width: 1440, height: 768 }
+// let viewport_sizing_device_size = {
+//     "mobile": { width: 375, height: 667 },
+//     "desktop": { width: 1024, height: 768 },
+//     "desktop_big": { width: 1440, height: 768 }
+// };
+
+var toTitleCase = function (str) {
+    str = str.toLowerCase().split(' ');
+    for (var i = 0; i < str.length; i++) {
+        str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+    }
+    return str.join(' ');
 };
+function replaceAll(str, find, replace) {
+    return str.replace(new RegExp(find, 'g'), replace);
+}
 
-async function screenshot_a_link(secretLink, filename, res, viewports, fullPage, waitTime) {
-  console.log("screenshot_a_link");
-  console.log(secretLink);
-  var timerStart = Date.now();
+async function screenshot_a_link(options) {
+    var secretLink = options.page;
+    var filename = options.filename;
+    var viewport = options.viewport;
+    var fullPage = options.fullPage;
+    var waitTime = options.waitTime;
+    var prototypePassword = options.prototypePassword;
 
-  var viewport_sizing = viewport_sizing_device_size;
+    console.log("screenshot_a_link");
+    console.log(secretLink);
+    var timerStart = Date.now();
 
+    // just allowing for 1 viewport, but keeping the logic for multiple for future iterations
+    var viewports = [viewport];
 
+    // launch the browser.
     let browser = await puppeteer.launch({ headless: true });
    
+    // cycle through all viewports
     for (let i = 0; i < viewports.length; i++) {
+
+        var vp = viewports[i];
+        vp.width = Number(vp.width);
+
+        // new tab
         var page2 = await browser.newPage();
 
-        // "mobile", "desktop", "desktop_big"
-        var viewportName = viewports[i];
 
-        console.log("height",  viewport_sizing[ viewportName ].height);
+        console.log("selected viewport, vp: ", vp);
 
         // set the viewport based on which viewport we're doing now.
-        await page2.setViewport( viewport_sizing[ viewportName ] );
+        await page2.setViewport( vp );
 
         // we can emulate phone, but has retina screens which makes things blurry.
         // await page2.emulate(iPhone8);
@@ -69,7 +104,6 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage,
                 1. So we load the page, let the DOM load, find out the document height.
                 2. Then reload with the document height set. 
                 This ensures the page loads without any need for resizing.
-
             */
 
             if (fullPage) {
@@ -82,12 +116,12 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage,
 
                 var newHeight = documentHeight;
 
-                console.log(" viewport_sizing[ viewportName ]",  viewport_sizing[ viewportName ]);
+                // console.log(" viewport_sizing[ viewportName ]",  viewport_sizing[ viewportName ]);
                 console.log(" new height",  newHeight);
 
                 // Set the new viewport based on that. 
 
-                await page2.setViewport( { width: viewport_sizing[ viewportName ].width, height: newHeight} );
+                await page2.setViewport( { width: vp.width, height: newHeight} );
 
                 // Reload
                 await page2.reload(secretLink);
@@ -96,25 +130,28 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage,
                 await page2.waitForSelector('body');
                 await page2.waitFor(Number(waitTime));
 
+                // update the viewport object for the new height
+                viewports[i].height = newHeight;
+
             }
 
 
-            var folder;
+            // var folder;
             
-            if (viewportName == "mobile") {
-                folder = "mobile/";
-            }
+            // if (viewportName == "mobile") {
+            //     folder = "mobile/";
+            // }
             
-            if (viewportName == "desktop") {
-                folder = "desktop/";
-            }
+            // if (viewportName == "desktop") {
+            //     folder = "desktop/";
+            // }
             
-            if (viewportName == "desktop_big") {
-                folder = "desktop_big/";
-            }
+            // if (viewportName == "desktop_big") {
+            //     folder = "desktop_big/";
+            // }
 
             // await page2.waitForNavigation({ waitUntil: 'load' });
-            await page2.screenshot({ path: 'public/screenshots/'+folder+filename+'.png', fullPage: fullPage });
+            await page2.screenshot({ path: 'public/screenshots/'+filename+'.png', fullPage: fullPage });
         }
 
 
@@ -122,7 +159,14 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage,
 
             let generationTime = await (Date.now()-timerStart) / 1000;
 
-            res.render("error", {error: error, page: secretLink, filename: filename+'.png', time: generationTime, fullPage: fullPage});
+            return {
+                status: "error", 
+                error: error, 
+                page: secretLink, 
+                filename: filename+'.png', 
+                time: generationTime, 
+                fullPage: fullPage
+            };
         }
 
         // // create better image title based on title
@@ -138,18 +182,131 @@ async function screenshot_a_link(secretLink, filename, res, viewports, fullPage,
 
     let generationTime = await (Date.now()-timerStart) / 1000;
 
-    await res.render("success", {page: secretLink, filename: filename+'.png', time: generationTime, totalShots: viewports.length, viewports: viewports, fullPage: fullPage});
+    return {
+        status: "success", 
+        page: secretLink, 
+        filename: filename+'.png', 
+        time: generationTime, 
+        totalShots: 1, 
+        viewports: viewports, 
+        fullPage: fullPage
+    }
 }
 
-var toTitleCase = function (str) {
-    str = str.toLowerCase().split(' ');
-    for (var i = 0; i < str.length; i++) {
-        str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+async function screenshot_multiple(options) {
+    var previewUrl = options.previewUrl;
+    var nodes = options.nodes;
+    var viewports = options.viewports;
+    var fullPage = options.fullPage;
+    var waitTime = options.waitTime;
+    var prototypePassword = options.prototypePassword;
+    var res = options.res;
+
+    var timerStart = Date.now();
+
+    // array of page secret links
+    var secretLinks = [];
+
+    // let's gather all the secret links
+
+    // we'll load the basic preview page with the left panel
+    // then: 
+        // let it load, grab the secret link
+
+    let browser = await puppeteer.launch({ headless: true });
+    let previewPage = await browser.newPage();
+    await previewPage.goto(previewUrl);
+    await previewPage.waitForSelector('body');
+
+
+    // check to see if we're on public and asking for password
+    var documentTitle = await previewPage.evaluate(() => {
+       return document.title; 
+    });
+
+    // password protected?
+    if (documentTitle.toLowerCase().indexOf("prototype password") > -1) {
+        console.log("password protected");
+        // password protected
+        // take the first input, add the password and submit.
+        try {
+            await previewPage.evaluate((password) => { 
+                document.querySelector('input[type="text"]').value = password; 
+                document.querySelector('div[data-label="Login"]').click();
+            }, prototypePassword);
+        }
+        catch (error) {
+            let generationTime = await (Date.now()-timerStart) / 1000;
+
+            return {
+                status: "error", 
+                error: error, 
+                page: nodeUrl, 
+                filename: nodeUrl, 
+                time: generationTime, 
+                fullPage: fullPage
+            };
+        }
+
     }
-    return str.join(' ');
-};
-function replaceAll(str, find, replace) {
-    return str.replace(new RegExp(find, 'g'), replace);
+
+    // the frame our pages will load into. 
+    const frame = previewPage.frames().find(fr => fr.name() === 'mainFrame');
+     
+    for (let i = 0; i < nodes.length; i++) {
+        var nodeUrl = nodes[i];
+
+        // find the sitemapPageLink with the nodeurl of the node we're looping through
+        console.log("try to click " + nodeUrl);
+        try {
+            await previewPage.evaluate((nodeUrl) => { document.querySelector('.sitemapPageLink[nodeurl="'+nodeUrl+'"]').click(); }, nodeUrl);
+        } 
+        catch (error) {
+            let generationTime = await (Date.now()-timerStart) / 1000;
+
+            return {
+                status: "error", 
+                error: error, 
+                page: nodeUrl, 
+                filename: nodeUrl, 
+                time: generationTime, 
+                fullPage: fullPage
+            };
+        }
+        await previewPage.waitFor(1000);
+            // await link.click();
+        await frame.waitForSelector('body');
+        // await frame.waitForNavigation();
+
+        var secretLink = await previewPage.evaluate(() => {
+           return document.getElementById('mainFrame').contentWindow.location.href;
+        });
+
+        var filename = await previewPage.evaluate( () => {
+            return document.getElementsByClassName('sitemapHighlight')[0].getElementsByClassName('sitemapPageName')[0].innerHTML.replace("&amp;", "&");
+        });
+
+        await secretLinks.push({secretLink: secretLink, filename: filename});
+
+    }
+
+    await previewPage.close();
+    await browser.close();
+
+    console.log("secretLinks", secretLinks);
+    var images = [];
+
+    // now that we have the secret links, let's screenshot each one.
+    for (var i=0; secretLinks.length > i; i++) {
+        var screenshotResponse = await screenshot_a_link(secretLinks[i].secretLink, secretLinks[i].filename, viewports, fullPage, waitTime);
+        await images.push( {folder: viewports[0], filename: screenshotResponse.filename} );
+    }
+
+    console.log("successfully generated "+images.length+" images");
+
+    let generationTime = await (Date.now()-timerStart) / 1000;
+
+    return {status: "success", page:previewUrl, images: images, totalShots: images.length, time: generationTime, viewport: viewports[0], fullPage: fullPage};
 }
 
 app.get("/", (req, res, next) => {
@@ -157,43 +314,40 @@ app.get("/", (req, res, next) => {
 	// var response = {'response':'nothing', page: req.query.page};
 	var page = req.query.page;
     var globalVars = req.query.globalVars;
-    var mobile = req.query.viewport_mobile || true;
-    var desktop = req.query.viewport_desktop || false;
-    var desktop_big = req.query.viewport_desktop_big || false;
-    var multiple = req.query.multiple || false;
+    var width = req.query.viewport_width
+    var height = req.query.viewport_height;
     var waitTime = req.query.wait || 1000;
+    var useVarsInFilename = req.query.useVarsInFilename;
+    var prototypePassword = req.query.prototypePassword || "";
+    var filename;
+
+    // create the viewport object
+
+
 
     // tack on the global variables
-    page = page+"#"+globalVars;
+    if (globalVars) {
+        page = page+"#"+globalVars;
+    }
 
     // fullpage default
     var fullPage = true;
-
     if (req.query.fullpage == "false") {
         fullPage = false;
     }
 
-    var filename;
+    // In case height isn't set up
+    if (height == "any") {
+        height = 667;
+        fullPage = true;
+    }
+    if (height == undefined) {
+        vp.height = 667;
+        fullPage = true;
+    }
 
-    // var viewports = {
-    //     mobile: mobile,
-    //     desktop: desktop,
-    //     desktop_big: desktop_big
-    // }
-
-    // gather the viewports we're doing. (most likely just 1, mobile)
-    var viewports = [];
-    if (mobile != "false") { viewports.push('mobile'); }
-    if (desktop) { viewports.push('desktop'); }
-    if (desktop_big) { viewports.push('desktop_big'); }
-
-    console.log(viewports);
-
-    // if (multiple) {
-
-    // } else {
-
-    // }
+    // Type cast as numbers and create viewport object
+    var viewport = {width: Number(width),height: Number(height)};
 
     if (req.query.filename && req.query.filename != "") {
         filename = decodeURIComponent((req.query.filename + '').replace(/\+/g, '%20'));
@@ -204,37 +358,110 @@ app.get("/", (req, res, next) => {
         filename = toTitleCase(filename);
     }
 
-	
-    // res.json({mobile: mobile, desktop: desktop, desktop_big: desktop_big, page: page, filename: filename+'.png'});
+    // add viewport prefix to filename
+    filename = viewport.width+"-"+filename;
 
+    // add global vars to filename
+    if (globalVars && useVarsInFilename) {
+        var filenameVars = globalVars.replace("&CSUM=1", "").replace("=", "-");
+        filename += " - " + filenameVars;
+    }
 
-	screenshot_a_link(page, filename, res, viewports, fullPage, waitTime);
+    var options = {
+        page : page,
+        filename: filename,
+        viewport: viewport,
+        globalVars : globalVars,
+        waitTime : waitTime,
+        prototypePassword: prototypePassword,
+        res: res,
+        fullPage: fullPage
+    }
 
-    // res.send("test");
-
+    handleScreenshot(options);
 });
 
-app.post("/multiple", (req, res, next) => {
+async function handleScreenshot (options) {
+    var screenshotResponse = await screenshot_a_link(options);
+    if (screenshotResponse.status == "success") {
+        console.log("success", screenshotResponse);
+        await options.res.render("success", screenshotResponse);
+    } else if (screenshotResponse.status == "error") {
+        await options.res.render("error", screenshotResponse);
+    }
+}
 
-    res.header("Access-Control-Allow-Origin", "*");
-    // res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.header("Access-Control-Allow-Headers", "Origin, Content-Type");
+async function handleMultiple (options) {
 
-    // var fs = require("fs");
+    var viewports = ['mobile'];
 
-    // fs.readFile("temp.txt", function(err, buf) {
-    //   console.log(buf.toString());
-    // });
-    console.log(req.body);
+    var screenshotResponse = await screenshot_multiple(options);
 
-    res.send(req.body);
+    if (screenshotResponse.status == "success") {
+        console.log("screenshotResponse", screenshotResponse);
+        // await res.render("success_multiple", screenshotResponse);
 
+        // send back response
+        // var response = {
+        //     status  : 200,
+        //     success : 'Updated Successfully',
+        //     images: screenshotResponse.images
+        // }
 
-});
+        // res.end(JSON.stringify(response));
+
+        res.render("success_multiple", screenshotResponse);
+
+    } else if (screenshotResponse.status == "error") {
+        // res.render("error", screenshotResponse);
+        // send back response
+        var response = {
+            status  : 500,
+            message : 'Something went wrong'
+        }
+
+        res.end(JSON.stringify(response));
+    }
+}
 
 app.get("/multiple", (req, res, next) => {
+
+    var nodes = req.query.nodes;
+    var previewUrl = req.query.purl;
+    var mobile = req.query.viewport_mobile || true;
+    var desktop = req.query.viewport_desktop || false;
+    var desktop_big = req.query.viewport_desktop_big || false;
+    var waitTime = req.query.wait || 1000;
+
+    var viewports = ['mobile'];
+
+    // fullpage default
+    var fullPage = true;
+    if (req.query.fullpage == "false") {
+        fullPage = false;
+    }
+    // console.log("req", req);
+    var url_string = req.protocol + '://' + req.get('host') + req.originalUrl;
+    console.log(url_string);
+    var url = new URL(url_string);
+    nodes = url.searchParams.getAll("nodes");
+    // console.log(options);
+
+
+    console.log("nodes", nodes);
+
+    var options = {
+        previewUrl : previewUrl,
+        nodes : nodes, 
+        viewports : viewports, 
+        fullPage : fullPage, 
+        waitTime : waitTime, 
+        prototypePassword : prototypePassword, 
+        res : res
+    }
+
+    handleMultiple(options);
     
-    res.render("success_multiple", {});
 
 });
 

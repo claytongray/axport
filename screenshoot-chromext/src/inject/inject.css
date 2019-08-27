@@ -2,22 +2,40 @@
  * Place your custom CSS styles here.
  **/
 
-#screenshoot_container {
-	position: fixed;
+#screenshoot_container.ax8 {
+/*	position: fixed;
 	top: 0;
 	right: 0;
 	padding: 4px 6px;
 	z-index:9999;
 	background: #ededed;
+	*/
+	padding: 10px;
+}
+#screenshoot-button-icon,
+#screenshoot-toggle-settings-icon {
+	height: 16px;
+	width: 16px;
+	background-size: 16px;
+	display: inline-block;
+	color: #000;
+	vertical-align: middle;
+	background-repeat: no-repeat;
 }
 
-#screenshoot_container button {
-	background: #9440C5;
-	color: #fff;
-	border: #B62DC0;
+
+#screenshoot_container.ax8 button {
+	background: #D8D8D8;
+	color: #000;
 	border-radius: 4px;
 	padding: 4px 8px;
-	margin: 0px 6px 2px 6px;
+	font-size: 12px;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+#screenshoot_container.ax9 {
+	top: 37px;
 }
 
 #screenshot_options {
@@ -34,6 +52,72 @@
 	font-size: 14px;
 }
 
-input[type="checkbox"].selectNode {
+.sitemapLeafNode input[type="checkbox"].selectNode {
 	margin-left: -10px;
+}
+
+input[type="checkbox"].selectNode {
+	margin-right: -3px;
+}
+#inspectControlFrameHeader li#screenshoot-toolbar-button {
+	width: auto;
+	line-height: 26px;
+}
+#inspectControlFrameHeader li a#screenshoot-button.ax9 {
+	background-repeat: no-repeat;
+	background-position: 2px center;
+	background-size: 18px;
+	padding-left: 24px;
+	padding-right: 4px;
+	width: auto;
+}
+#screenshoot-toolbar-button-a span {
+	font-size: 12px;
+	font-weight: bold;
+}
+#screenshoot-settings.ax8 {
+	display: none;
+	padding-top: 12px;
+}
+#screenshoot-settings.ax8 .showOption.withSelect {
+	padding-top: 12px;
+}
+
+#screenshoot-settings.ax9 input[type="checkbox"] {
+	display: none;
+}
+#screenshoot-settings.ax9 {
+	padding: 7.5px 9px 12px 16px;
+	margin-top: 9px;
+	border-top: solid 1px #bdbcbc;
+	order: 12;
+}
+#screenshoot-settings.ax8 .showOption.withCheckbox {
+	padding: 10px 0 10px 20px;
+}
+#screenshoot-settings.ax8 .overflowOptionCheckbox {
+	position: absolute;
+	margin-left: -20px;
+}
+#screenshoot-settings.ax9 .showOption.withCheckbox {
+	padding: 10px 0 10px 30px;
+}
+#screenshoot-settings.ax9 .overflowOptionCheckbox {
+	position: relative;
+	margin-left: -30px;
+}
+#screenshoot-settings .small-number {
+	width: 4.5em;
+}
+#screenshoot-settings .label {
+	font-weight: bold;
+}
+#screenshoot-settings .helper-text {
+	opacity: 0.8;
+	font-size: 13px;
+	display: block;
+}
+.showOption.withText,
+.showOption.withSelect {
+	padding-left: 0px;
 }
