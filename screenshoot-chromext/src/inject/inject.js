@@ -493,7 +493,7 @@ chrome.extension.sendMessage({}, function(response) {
 
 
 				e.stopPropagation();
-				return false;
+				// return false;
 			});
 
 

@@ -152,6 +152,7 @@ async function screenshot_a_link(options) {
 
             // await page2.waitForNavigation({ waitUntil: 'load' });
             await page2.screenshot({ path: 'public/screenshots/'+filename+'.png', fullPage: fullPage });
+
         }
 
 
@@ -296,17 +297,43 @@ async function screenshot_multiple(options) {
     console.log("secretLinks", secretLinks);
     var images = [];
 
+    function jsonCopy(src) {
+      return JSON.parse(JSON.stringify(src));
+    }
+
     // now that we have the secret links, let's screenshot each one.
     for (var i=0; secretLinks.length > i; i++) {
-        var screenshotResponse = await screenshot_a_link(secretLinks[i].secretLink, secretLinks[i].filename, viewports, fullPage, waitTime);
-        await images.push( {folder: viewports[0], filename: screenshotResponse.filename} );
+
+        // clone the viewport so previous viewports don't carry over
+        var clonedViewport = jsonCopy(viewports[0]);
+
+        var screenshotOpts = {
+            page: secretLinks[i].secretLink,
+            filename: secretLinks[i].filename,
+            viewport: clonedViewport,
+            fullPage: fullPage,
+            waitTime: waitTime,
+            prototypePassword: prototypePassword
+        };
+        // fire the screenshot
+        var screenshotResponse = await screenshot_a_link( screenshotOpts );
+
+        await images.push( {folder: "/", filename: screenshotResponse.filename} );
     }
 
     console.log("successfully generated "+images.length+" images");
 
     let generationTime = await (Date.now()-timerStart) / 1000;
 
-    return {status: "success", page:previewUrl, images: images, totalShots: images.length, time: generationTime, viewport: viewports[0], fullPage: fullPage};
+    return {
+        status: "success", 
+        page:previewUrl, 
+        images: images, 
+        totalShots: images.length, 
+        time: generationTime, 
+        viewport: viewports[0], 
+        fullPage: fullPage
+    };
 }
 
 app.get("/", (req, res, next) => {
@@ -393,8 +420,6 @@ async function handleScreenshot (options) {
 
 async function handleMultiple (options) {
 
-    var viewports = ['mobile'];
-
     var screenshotResponse = await screenshot_multiple(options);
 
     if (screenshotResponse.status == "success") {
@@ -410,7 +435,7 @@ async function handleMultiple (options) {
 
         // res.end(JSON.stringify(response));
 
-        res.render("success_multiple", screenshotResponse);
+        options.res.render("success_multiple", screenshotResponse);
 
     } else if (screenshotResponse.status == "error") {
         // res.render("error", screenshotResponse);
@@ -420,7 +445,7 @@ async function handleMultiple (options) {
             message : 'Something went wrong'
         }
 
-        res.end(JSON.stringify(response));
+        options.res.end(JSON.stringify(response));
     }
 }
 
@@ -428,12 +453,23 @@ app.get("/multiple", (req, res, next) => {
 
     var nodes = req.query.nodes;
     var previewUrl = req.query.purl;
-    var mobile = req.query.viewport_mobile || true;
-    var desktop = req.query.viewport_desktop || false;
-    var desktop_big = req.query.viewport_desktop_big || false;
     var waitTime = req.query.wait || 1000;
+    var prototypePassword = req.query.prototypePassword || "";
+    var width = req.query.viewport_width
+    var height = req.query.viewport_height;
 
-    var viewports = ['mobile'];
+    // In case height isn't set up
+    if (height == "any") {
+        height = 667;
+        fullPage = true;
+    }
+    if (height == undefined) {
+        vp.height = 667;
+        fullPage = true;
+    }
+
+    // Type cast as numbers and create viewport object
+    var viewport = {width: Number(width),height: Number(height)};
 
     // fullpage default
     var fullPage = true;
@@ -453,7 +489,7 @@ app.get("/multiple", (req, res, next) => {
     var options = {
         previewUrl : previewUrl,
         nodes : nodes, 
-        viewports : viewports, 
+        viewports : [viewport], 
         fullPage : fullPage, 
         waitTime : waitTime, 
         prototypePassword : prototypePassword, 
