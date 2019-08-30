@@ -45,6 +45,11 @@ var toTitleCase = function (str) {
     }
     return str.join(' ');
 };
+
+function jsonCopy(src) {
+  return JSON.parse(JSON.stringify(src));
+}
+
 function replaceAll(str, find, replace) {
     return str.replace(new RegExp(find, 'g'), replace);
 }
@@ -56,6 +61,7 @@ async function screenshot_a_link(options) {
     var fullPage = options.fullPage;
     var waitTime = options.waitTime;
     var prototypePassword = options.prototypePassword;
+    var axureVersion = options.axureVersion;
 
     console.log("screenshot_a_link");
     console.log(secretLink);
@@ -118,6 +124,7 @@ async function screenshot_a_link(options) {
 
                 // console.log(" viewport_sizing[ viewportName ]",  viewport_sizing[ viewportName ]);
                 console.log(" new height",  newHeight);
+                console.log("width", vp.width);
 
                 // Set the new viewport based on that. 
 
@@ -126,12 +133,27 @@ async function screenshot_a_link(options) {
                 // Reload
                 await page2.reload(secretLink);
 
+                await page2.setViewport( { width: vp.width, height: newHeight} );
+                await page2.waitFor(6000);
+                await page2.setViewport( { width: vp.width, height: newHeight} );
+
                 // Wait
                 await page2.waitForSelector('body');
                 await page2.waitFor(Number(waitTime));
 
                 // update the viewport object for the new height
                 viewports[i].height = newHeight;
+
+                // Get the "viewport" of the page, as reported by the page.
+                var dimensions = await page2.evaluate(() => {
+                  return {
+                    width: document.documentElement.clientWidth,
+                    height: document.documentElement.clientHeight,
+                    deviceScaleFactor: window.devicePixelRatio
+                  };
+                });
+
+                console.log('Dimensions:', dimensions);
 
             }
 
@@ -150,8 +172,33 @@ async function screenshot_a_link(options) {
             //     folder = "desktop_big/";
             // }
 
+
+            // Get the "viewport" of the page, as reported by the page.
+            var dimensions = await page2.evaluate(() => {
+              return {
+                width: document.documentElement.clientWidth,
+                height: document.documentElement.clientHeight,
+                deviceScaleFactor: window.devicePixelRatio
+              };
+            });
+
+            console.log('Dimensions:', dimensions);
+
             // await page2.waitForNavigation({ waitUntil: 'load' });
             await page2.screenshot({ path: 'public/screenshots/'+filename+'.png', fullPage: fullPage });
+
+
+
+            // Get the "viewport" of the page, as reported by the page.
+            var dimensions = await page2.evaluate(() => {
+              return {
+                width: document.documentElement.clientWidth,
+                height: document.documentElement.clientHeight,
+                deviceScaleFactor: window.devicePixelRatio
+              };
+            });
+
+            console.log('Dimensions:', dimensions);
 
         }
 
@@ -202,6 +249,7 @@ async function screenshot_multiple(options) {
     var waitTime = options.waitTime;
     var prototypePassword = options.prototypePassword;
     var res = options.res;
+    var axureVersion = options.axureVersion;
 
     var timerStart = Date.now();
 
@@ -260,14 +308,27 @@ async function screenshot_multiple(options) {
         // find the sitemapPageLink with the nodeurl of the node we're looping through
         console.log("try to click " + nodeUrl);
         try {
-            await previewPage.evaluate((nodeUrl) => { document.querySelector('.sitemapPageLink[nodeurl="'+nodeUrl+'"]').click(); }, nodeUrl);
+            if (axureVersion >= 9) {
+                console.log("axure 9");
+                
+                // for axure9, the sitemap clicking works different. 
+                // I guess they changed the event to look for mousedown on the whole div element.
+                await previewPage.evaluate((nodeUrl) => { 
+                    var e = document.createEvent('HTMLEvents');
+                    var el = document.querySelector('.sitemapPageLink[nodeurl="'+nodeUrl+'"]').closest('.sitemapPageLinkContainer');
+                    e.initEvent('mousedown', false, true);
+                    el.dispatchEvent(e);
+                }, nodeUrl);   
+            } else {
+                await previewPage.evaluate((nodeUrl) => { document.querySelector('.sitemapPageLink[nodeurl="'+nodeUrl+'"]').click(); }, nodeUrl);   
+            }
         } 
         catch (error) {
             let generationTime = await (Date.now()-timerStart) / 1000;
 
             return {
                 status: "error", 
-                error: error, 
+                error: "Click error" + error, 
                 page: nodeUrl, 
                 filename: nodeUrl, 
                 time: generationTime, 
@@ -296,10 +357,6 @@ async function screenshot_multiple(options) {
 
     console.log("secretLinks", secretLinks);
     var images = [];
-
-    function jsonCopy(src) {
-      return JSON.parse(JSON.stringify(src));
-    }
 
     // now that we have the secret links, let's screenshot each one.
     for (var i=0; secretLinks.length > i; i++) {
@@ -347,6 +404,7 @@ app.get("/", (req, res, next) => {
     var useVarsInFilename = req.query.useVarsInFilename;
     var prototypePassword = req.query.prototypePassword || "";
     var filename;
+    var axureVersion = req.query.axv;
 
     // create the viewport object
 
@@ -402,7 +460,8 @@ app.get("/", (req, res, next) => {
         waitTime : waitTime,
         prototypePassword: prototypePassword,
         res: res,
-        fullPage: fullPage
+        fullPage: fullPage,
+        axureVersion: axureVersion
     }
 
     handleScreenshot(options);
@@ -442,7 +501,7 @@ async function handleMultiple (options) {
         // send back response
         var response = {
             status  : 500,
-            message : 'Something went wrong'
+            message : 'Something went wrong: ' + screenshotResponse.error
         }
 
         options.res.end(JSON.stringify(response));
@@ -457,6 +516,7 @@ app.get("/multiple", (req, res, next) => {
     var prototypePassword = req.query.prototypePassword || "";
     var width = req.query.viewport_width
     var height = req.query.viewport_height;
+    var axureVersion = req.query.axv;
 
     // In case height isn't set up
     if (height == "any") {
@@ -493,6 +553,7 @@ app.get("/multiple", (req, res, next) => {
         fullPage : fullPage, 
         waitTime : waitTime, 
         prototypePassword : prototypePassword, 
+        axureVersion : axureVersion,
         res : res
     }
 

@@ -29,6 +29,11 @@ chrome.extension.sendMessage({}, function(response) {
 		+ '		<input type="number" class="small-number" id="screenshoot-setting-customWidth" placeholder="width" value="" data-settingId="customWidth" /> x'
 		+ '<input type="number" class="small-number" id="screenshoot-setting-customHeight" placeholder="height" value="" data-settingId="customHeight" />'
 		+ '		<span class="helper-text">What width x height (pixels) to use when there is no adaptive view setup.</span>'
+		+ ' </p>'
+		+ '	<p class="showOption withCheckbox">'
+		+ '		<span class="overflowOptionCheckbox" id="screenshoot-setting-scrollToPage" data-settingId="scrollToPage"><input type="checkbox" id="screenshoot-checkbox-scrollToPage" /></span>'
+		+ '		<span class="label">Scroll to page</span><br />'
+		+ '		<span class="helper-text">Once axshare loads, move the sitemap to the current highlighted page. (Only works on initial load)</span>'
 		+ ' </p>';
 
 
@@ -121,7 +126,7 @@ chrome.extension.sendMessage({}, function(response) {
 				console.log("new width", width);
 
 				// update button
-				$('#screenshoot-button .viewport-name').text( width );
+				$('#screenshoot-button .viewport-name').text( width+"x"+height );
 
 				// and update the sync settings
 				settings.adaptiveView = {width: width, height: height};
@@ -150,7 +155,7 @@ chrome.extension.sendMessage({}, function(response) {
 					$('#screenshoot-toolbar-button, #screenshoot-settings').remove();
 
 					$('#inspectControlFrameHeader').append('<li id="screenshoot-toolbar-button">'
-						+ '	<a pluginid="screenshoot" title="Screenshot this page" id="screenshoot-button" class="ax9" style="display: none;"><span class="viewport-name"></span></a>'
+						+ '	<a pluginid="screenshoot" title="Screenshot this page" id="screenshoot-button" class="ax9" style="display: none;"><span class="viewport-name"></span><span class="screenamount"></span></a>'
 						+ '</li>');
 
 					// Add our icon
@@ -202,6 +207,17 @@ chrome.extension.sendMessage({}, function(response) {
 					if ($('.sitemapHighlight').length > 0 && settings.scrollToPage) {
 						$('#sitemapTreeContainer').scrollTop( $('.sitemapHighlight').offset().top-250 ); //-160
 					}
+
+
+					// update setting for scrollToPage
+					if (settings.scrollToPage) {
+						$('#screenshoot-checkbox-scrollToPage').prop('checked', 'checked');
+					} else {
+						$('#screenshoot-checkbox-scrollToPage').prop('checked', false);
+					}
+
+					// move the searchbox into the main header
+					$("#searchDiv").appendTo('#sitemapHeader');
 
 					// listen for settings checkbox changes
 					$('#screenshoot-settings input[type="checkbox"]').change(function (e) {
@@ -348,7 +364,7 @@ chrome.extension.sendMessage({}, function(response) {
 							syncSettings();
 
 							// update the button
-							$('#screenshoot-button .viewport-name').text( width );
+							$('#screenshoot-button .viewport-name').text( width+"x"+height );
 
 							// set the selected size
 							selectedSize = {width: width, height: height};
@@ -357,7 +373,7 @@ chrome.extension.sendMessage({}, function(response) {
 							selected = " selected";
 
 							// update the button
-							$('#screenshoot-button .viewport-name').text( width );
+							$('#screenshoot-button .viewport-name').text( width+"x"+height );
 
 
 							// set the selected size 
@@ -448,16 +464,18 @@ chrome.extension.sendMessage({}, function(response) {
 			// 	console.log("hashchange");
 			// 	render();
 			// });
-
+			var loadTimes = 0;
 			$('#mainFrame').on('load', function (e) {
 				function checkIframeLoaded () {
-					if (iframeLink != document.getElementById('mainFrame').contentWindow.location.href) {
+					if (iframeLink != document.getElementById('mainFrame').contentWindow.location.href || loadTimes > 12) {
 						// not the same
 						console.log("loaded");
+						loadTimes = 0;
 						clearInterval(checkIframeLoadStatus);
 						render();
 					} else {
-						console.log("not loaded");
+						loadTimes++;
+						console.log("not loaded "+loadTimes);
 					}
 				}
 				$('#screenshoot-button').hide();
@@ -481,14 +499,31 @@ chrome.extension.sendMessage({}, function(response) {
 
 
 			// Page checkbox checked. Now we're in multiple land
-			$('.selectNode').click(function (e) {
+			// using mousedown because that's what the sitemapPageContainer listens for so we can stop propagation
+			$('.selectNode').on('mousedown', function (e) {
+				e.stopPropagation();
+			});
+
+			$('.selectNode').on('click', function (e) {
 				var checked = $('.selectNode:checked');
 				// e.currentTarget
 
 				if (checked.length > 0) {
-					$('#screenshoot-button .directive').text('Screenshot ('+checked.length+') at');
+					if (axureVersion >= 9) {
+						$('#screenshoot-button .screenamount').text('('+checked.length+') ');
+					} else {
+						// axure 8
+						$('#screenshoot-button .directive').text('Screenshot ('+checked.length+') at');
+					}
 				} else {
-					$('#screenshoot_container .directive').text('Screenshot at');
+					// reset the text
+					if (axureVersion >= 9) {
+						$('#screenshoot-button .screenamount').text('');
+					} else {
+						// axure 8
+						$('#screenshoot_container .directive').text('Screenshot at');
+					}
+					
 				}
 
 
@@ -583,7 +618,8 @@ chrome.extension.sendMessage({}, function(response) {
 				// Send over adaptive view info
 				href = href + "&viewport_width="+settings.adaptiveView.width+"&viewport_height="+settings.adaptiveView.height;
 
-
+				// Axure version, because why not
+				href = href+"&axv="+axureVersion;
 
 				// Fullpage
 				if (fullpage) {
