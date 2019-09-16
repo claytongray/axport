@@ -62,6 +62,10 @@ async function screenshot_a_link(options) {
     var waitTime = options.waitTime;
     var prototypePassword = options.prototypePassword;
     var axureVersion = options.axureVersion;
+    var path = "public/screenshots/"
+
+    // filesystem
+    const fs = require('fs');
 
     console.log("screenshot_a_link");
     console.log(secretLink);
@@ -78,6 +82,30 @@ async function screenshot_a_link(options) {
 
         var vp = viewports[i];
         vp.width = Number(vp.width);
+
+        // set up folder
+        var folder = vp.width+"x"+vp.height+"/";
+
+        try {
+          if (!fs.existsSync(path+folder)){
+            fs.mkdirSync(path+folder)
+          }
+        } catch (err) {
+          console.error("Couldn't create folder", err);
+
+          let generationTime = await (Date.now()-timerStart) / 1000;
+
+          return {
+              status: "error", 
+              error: "Couldn't create folder: "+ error, 
+              page: secretLink, 
+              folder: folder,
+              filename: filename+'.png', 
+              time: generationTime, 
+              fullPage: fullPage
+          };
+
+        }
 
         // new tab
         var page2 = await browser.newPage();
@@ -133,10 +161,6 @@ async function screenshot_a_link(options) {
                 // Reload
                 await page2.reload(secretLink);
 
-                await page2.setViewport( { width: vp.width, height: newHeight} );
-                await page2.waitFor(6000);
-                await page2.setViewport( { width: vp.width, height: newHeight} );
-
                 // Wait
                 await page2.waitForSelector('body');
                 await page2.waitFor(Number(waitTime));
@@ -152,9 +176,6 @@ async function screenshot_a_link(options) {
                     deviceScaleFactor: window.devicePixelRatio
                   };
                 });
-
-                console.log('Dimensions:', dimensions);
-
             }
 
 
@@ -185,7 +206,7 @@ async function screenshot_a_link(options) {
             console.log('Dimensions:', dimensions);
 
             // await page2.waitForNavigation({ waitUntil: 'load' });
-            await page2.screenshot({ path: 'public/screenshots/'+filename+'.png', fullPage: fullPage });
+            await page2.screenshot({ path: path+folder+filename+'.png', fullPage: fullPage });
 
 
 
@@ -197,8 +218,6 @@ async function screenshot_a_link(options) {
                 deviceScaleFactor: window.devicePixelRatio
               };
             });
-
-            console.log('Dimensions:', dimensions);
 
         }
 
@@ -233,6 +252,7 @@ async function screenshot_a_link(options) {
     return {
         status: "success", 
         page: secretLink, 
+        folder: folder,
         filename: filename+'.png', 
         time: generationTime, 
         totalShots: 1, 
@@ -375,7 +395,7 @@ async function screenshot_multiple(options) {
         // fire the screenshot
         var screenshotResponse = await screenshot_a_link( screenshotOpts );
 
-        await images.push( {folder: "/", filename: screenshotResponse.filename} );
+        await images.push( {folder: screenshotResponse.folder, filename: screenshotResponse.filename} );
     }
 
     console.log("successfully generated "+images.length+" images");
@@ -444,7 +464,7 @@ app.get("/", (req, res, next) => {
     }
 
     // add viewport prefix to filename
-    filename = viewport.width+"-"+filename;
+    // filename = viewport.width+"-"+filename;
 
     // add global vars to filename
     if (globalVars && useVarsInFilename) {

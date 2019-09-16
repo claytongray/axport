@@ -1,6 +1,6 @@
 {
   "name": "Screenshoot Axure Pages",
-  "version": "0.0.1",
+  "version": "1.0",
   "manifest_version": 2,
   "description": "Click the different viewport sizes to automatically generate screenshots. Make sure the node.js service is running.",
   "homepage_url": "http://extensionizr.com",

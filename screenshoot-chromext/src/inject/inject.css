@@ -61,6 +61,8 @@ input[type="checkbox"].selectNode {
 	vertical-align: middle;
 	position: relative;
 	bottom: 2px;
+	font-size: 20px;
+	cursor: pointer;
 }
 #inspectControlFrameHeader li#screenshoot-toolbar-button {
 	width: auto;

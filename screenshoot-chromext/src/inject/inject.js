@@ -68,7 +68,7 @@ chrome.extension.sendMessage({}, function(response) {
 			var ax8_baseSizes = {width: 375, height: 667};
 
 			// User settings set in chrome
-			var settings = {
+			var defaultSettings = {
 				fullpage: false,
 				waitTime: 200,
 				useVarsInFilename: false,
@@ -78,11 +78,11 @@ chrome.extension.sendMessage({}, function(response) {
 				customSize: {width: 375, height: 667}
 			}
 
-
+			var settings = defaultSettings;
 
 			function syncSettings () {
 				chrome.storage.sync.set({ ScreenshootSettings : settings });
-				console.log("settings synced", settings);
+				// console.log("settings synced", settings);
 			}
 
 
@@ -98,7 +98,7 @@ chrome.extension.sendMessage({}, function(response) {
 					checked = (!$(el).prop('checked'));
 				}
 
-				console.log("settingName", settingName);
+				// console.log("settingName", settingName);
 				if ( checked ) {
 					// selected, turn off
 					if (axureVersion >= 9) {
@@ -123,7 +123,7 @@ chrome.extension.sendMessage({}, function(response) {
 				var width = $('#screenshoot-setting-adaptiveview').find(":selected").attr('data-width');
 				var height = $('#screenshoot-setting-adaptiveview').find(":selected").attr('data-height');
 
-				console.log("new width", width);
+				// console.log("new width", width);
 
 				// update button
 				$('#screenshoot-button .viewport-name').text( width+"x"+height );
@@ -147,7 +147,7 @@ chrome.extension.sendMessage({}, function(response) {
 				/* Build Tool */
 
 
-				console.log("settings", settings);
+				// console.log("settings", settings);
 
 
 				if (axureVersion >= 9) {
@@ -203,12 +203,6 @@ chrome.extension.sendMessage({}, function(response) {
 
 
 
-					// scroll to current page (just for fun)
-					if ($('.sitemapHighlight').length > 0 && settings.scrollToPage) {
-						$('#sitemapTreeContainer').scrollTop( $('.sitemapHighlight').offset().top-250 ); //-160
-					}
-
-
 					// update setting for scrollToPage
 					if (settings.scrollToPage) {
 						$('#screenshoot-checkbox-scrollToPage').prop('checked', 'checked');
@@ -223,6 +217,61 @@ chrome.extension.sendMessage({}, function(response) {
 					$('#screenshoot-settings input[type="checkbox"]').change(function (e) {
 						toggleDropdownCheckboxes($(e.currentTarget));
 					});
+
+
+					// scroll to current page (just for fun)
+					if ($('.sitemapHighlight').length > 0 && settings.scrollToPage) {
+						// console.log("scrollToPage");
+
+						// visual height of the box and current scrollTop
+						var containerHeight = $('#sitemapTreeContainer').height();
+						var containerScrollTop = $('#sitemapTreeContainer').scrollTop();
+
+						// last current page
+						var $lastPage = $('.sitemapNode.startScrollPage');
+						// current page
+						var $currentPage = $('.sitemapHighlight').parent();
+
+						// where is the current page
+						var pageOffset = $currentPage.offset().top;
+						var targetScrollTop = pageOffset - 325;
+
+						// do we even need to scroll?
+						if ((targetScrollTop > (containerHeight - 250))) {
+							// console.log("need to scroll because of 1", targetScrollTop, containerHeight - 250);
+						}
+						if (targetScrollTop < 210) {
+							// console.log("need to scroll because of 2", targetScrollTop);
+						}
+
+						// only do it on the first one
+						if ($lastPage.length == 0) {
+							// if ((targetScrollTop > (containerHeight - 250)) )
+							// if (targetScrollTop < 210 )
+
+							// set to hidden so we get absolute scrollTop values.
+							$('#sitemapTreeContainer').scrollTop(0)
+							// $('#sitemapTreeContainer').css('overflow', 'hidden');
+
+
+							// console.log("targetScrollTop", targetScrollTop );
+
+							$('#sitemapTreeContainer').scrollTop( targetScrollTop ); //-160
+
+							// $('#sitemapTreeContainer').css('overflow', 'auto');
+							$currentPage.addClass('startScrollPage');
+						}
+
+					} else {
+						if (settings.scrollToPage) {
+							console.log("Current page not found in sitemap (Adjust publish settings!)");
+						} else {
+							// console.log("scrollToPage off");
+						}
+
+					}
+
+
 
 					// Add listener to settings toggle
 					$('#screenshoot-toggle-settings').click(function (e) {
@@ -279,7 +328,7 @@ chrome.extension.sendMessage({}, function(response) {
 					}
 				}
 
-				console.log("adaptive views?", adaptiveViewsActive);
+				// console.log("adaptive views?", adaptiveViewsActive);
 
 				// update setting for full page
 				if (settings.fullpage) {
@@ -441,13 +490,20 @@ chrome.extension.sendMessage({}, function(response) {
 
 			// Get values from Chrome and render
 			chrome.storage.sync.get('ScreenshootSettings', function(data) {
-				console.log("data", data);
+				// console.log("data", data);
 			    if (data.ScreenshootSettings) {
 			    	settings = data.ScreenshootSettings;
 
-			    	if (settings.adaptiveView == undefined) {
-			    		settings.adaptiveView = {width: "default", height:"default"};
-			    	}
+			    	// set up default values
+			    	if (!settings.fullPage) { settings.fullPage = defaultSettings.fullPage; }
+			    	if (!settings.waitTime) { settings.waitTime = defaultSettings.waitTime; }
+			    	if (!settings.useVarsInFilename) { settings.useVarsInFilename = defaultSettings.useVarsInFilename; }
+			    	if (!settings.adaptiveView) { settings.adaptiveView = defaultSettings.adaptiveView; }
+			    	if (!settings.scrollToPage) { settings.scrollToPage = defaultSettings.scrollToPage; }
+			    	if (!settings.ax8_baseSizes) { settings.ax8_baseSizes = defaultSettings.ax8_baseSizes; }
+			    	if (!settings.customSize) { settings.customSize = defaultSettings.customSize; }
+
+			    	// console.log("settings", settings);
 
 			    } else {
 			    	// let's set the intial settings
@@ -467,15 +523,15 @@ chrome.extension.sendMessage({}, function(response) {
 			var loadTimes = 0;
 			$('#mainFrame').on('load', function (e) {
 				function checkIframeLoaded () {
-					if (iframeLink != document.getElementById('mainFrame').contentWindow.location.href || loadTimes > 12) {
+					if (document.getElementById('mainFrame') && iframeLink != document.getElementById('mainFrame').contentWindow.location.href || loadTimes > 12) {
 						// not the same
-						console.log("loaded");
+						// console.log("loaded");
 						loadTimes = 0;
 						clearInterval(checkIframeLoadStatus);
 						render();
 					} else {
 						loadTimes++;
-						console.log("not loaded "+loadTimes);
+						// console.log("not loaded "+loadTimes);
 					}
 				}
 				$('#screenshoot-button').hide();
@@ -573,12 +629,20 @@ chrome.extension.sendMessage({}, function(response) {
 				} else {
 					// Single
 
+					var frame;
+					// two frames?
+					if ($('#secondFrame').length > 0) {
+						frame = document.getElementById('secondFrame');
+					} else {
+						frame = document.getElementById('mainFrame');
+					}
+
 					// get global variables
-					var frameUrl = document.getElementById('mainFrame').contentWindow.location.href;
+					var frameUrl = frame.contentWindow.location.href;
 					var globalVars = "";
 					var parts = frameUrl.split("#");
-					console.log(frameUrl);
-					console.log(parts);
+					// console.log(frameUrl);
+					// console.log(parts);
 					if (parts.length > 1) {
 						// we have some global variables
 						globalVars = parts[1];
@@ -641,7 +705,7 @@ chrome.extension.sendMessage({}, function(response) {
 
 
 
-				console.log("href", href);
+				// console.log("href", href);
 
 
 				// create link, click it, and remove it.
@@ -661,3 +725,12 @@ chrome.extension.sendMessage({}, function(response) {
 	}
 	}, 10);
 });
+
+/*
+
+TODO:
+
+Content editable text:
+$('.text span').prop('contenteditable', true);
+
+*/

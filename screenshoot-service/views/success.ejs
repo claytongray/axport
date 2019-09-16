@@ -20,11 +20,11 @@
 
           <div class="columns">
             <div class="column">
-              <a href="screenshots/<%= filename %>" download><img src="screenshots/<%= filename %>" /></a>
+              <a href="/screenshots/<%= folder %><%= filename %>" download><img src="/screenshots/<%= folder %><%= filename %>" /></a>
             </div>
             <div class="column">
               <p>
-                <strong><%= filename %></strong>
+                <strong><%= folder %><%= filename %></strong>
               </p>
               <p>
                 <strong>Viewport:</strong> <%= viewports[0].width %> x <%= viewports[0].height %> 
@@ -39,7 +39,7 @@
                 <a href="<%= page %>"><%= page %></a>
               </p>
               <p>
-                <a href="screenshots/mobile/<%= filename %>" class="button is-medium" download>Download</a>
+                <a href="/screenshots/<%= folder %><%= filename %>" class="button is-medium" download>Download</a>
               </p>
             </div>
           </div>
@@ -60,8 +60,8 @@
 
             <% viewports.forEach(function (viewport) { %>
               <div class="screenshot">
-                <a href="screenshots/<%= viewport %>/<%= filename %>"><img src="screenshots/<%= viewport %>/<%= filename %>" /></a><br />
-                <strong><%= viewport %>/<%= filename %></strong>
+                <a href="screenshots/<%= folder %><%= filename %>"><img src="screenshots/<%= folder %><%= filename %>" /></a><br />
+                <strong><%= folder %><%= filename %></strong>
               </div>
             <% }); %>
 

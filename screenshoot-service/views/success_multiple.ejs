@@ -33,11 +33,11 @@
 
           <% images.forEach(function (image) { %>
             <div class="screenshot">
-              <a href="screenshots/<%= image.folder %>/<%= image.filename %>">
-                <img src="screenshots/<%= image.folder %>/<%= image.filename %>" />
+              <a href="screenshots/<%= image.folder %><%= image.filename %>">
+                <img src="screenshots/<%= image.folder %><%= image.filename %>" />
               </a>
               <br />
-              <strong><%= image.folder %>/<%= image.filename %></strong>
+              <strong><%= image.folder %><%= image.filename %></strong>
             </div>
           <% }); %>
 
