@@ -83,8 +83,8 @@ async function screenshot_a_link(options) {
 
     let previewPage = await browser.newPage();
     await previewPage.goto(secretLink);
-    await previewPage.waitForSelector('div[data-label="Login"]');
-    // const form = await previewPage.$('div[data-label="Login"]');
+    await previewPage.waitForSelector('body');
+    // await previewPage.waitForSelector('div[data-label="Login"]');
 
 
     // check to see if we're on public and asking for password
@@ -175,7 +175,8 @@ async function screenshot_a_link(options) {
             await browser.close();
 
         }
-
+    } else {
+        // await previewPage.waitForNavigation({waitUntil: 'load', timeout: 10000});
     }
 
 

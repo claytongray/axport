@@ -86,9 +86,8 @@ This will guide you through installing Node.js, Node Package Manager (NPM), and 
 2. In the top right, turn on "Developer mode" by clicking the toggle switch.
 3. Then click Load Unpacked and select the Chrome Extension folder (`screenshoot-chromext`) from the project folder.
 
-The extension is now installed in chrome and the overlay will show up when viewing the local axshare preview.
-
-![Chrome Output](readme_assets/preview_share.png)
+The extension is now installed in chrome and you should see the Axport icon on the top right of the Axure Prototype player.
+![Chrome Output](readme_assets/preview.png)
 
 
 ## Taking Screenshots
@@ -96,13 +95,12 @@ The extension is now installed in chrome and the overlay will show up when viewi
 Taking screenshots is easy as clicking the screensize you want. 
 
 Open a Axure preview on your local as you normally would. (Clicking "Preview" in Axure for example).
-If the chrome extension is loaded correctly, it will show in the top right of the screen with 4 purple buttons. 
-375, 1024, 1440, and All. By clicking the first three you will get 1 screenshot at that adaptive view.
-If you click All, you will generate 3 screenshots at all three of those sizes.
+Click the Axport icon to generate the screenshot.
+Use the ••• menu to adjust the size and settings of your screenshots.
 
-You'll see your browser load another localhost page. That kicks off the node process to start taking screen shots. Once you're done with the screenshots you can happily close that window. Do NOT refresh that page when you make an update. Axure often versions unique urls to keep your browser from caching pages, so once you use that link, you'll want to close it and start again from the Axshare preview page.
+![Use the ••• menu to adjust the size and settings of your screenshots.](readme_assets/preview_settings.png) 
 
-When that starts, it loads an invisible Chromium, opens the page, resizes to the adaptive view size, captures the screen, saves the file, and closes out. This happens multiple times for multiple screenshots and you won't even notice it.
+You'll see your browser load another localhost page. That kicks off the node process to start taking screen shots. Once you're done with the screenshots you can happily close that window. Sometimes I'll keep that window open as I'm working on quick changes to get options of the same screen quickly.
 
 Screenshots are saved in `/screenshoot-service/public/screenshots/`.
 Each adaptive view is stored in their own folder. 
