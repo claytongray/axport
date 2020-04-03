@@ -1,4 +1,4 @@
-![Chrome Output](readme_assets/preview_multiple.png)
+![Chrome Output](readme_assets/axport_128.png)
 
 # Axport for Axure Prototypes
 ## Easily download screens and states as images
