@@ -96,15 +96,19 @@ Taking screenshots is easy as clicking the screensize you want.
 
 Open a Axure preview on your local as you normally would. (Clicking "Preview" in Axure for example).
 Click the Axport icon to generate the screenshot.
+
+![Screenshot generated](readme_assets/preview_share.png) 
+Here is the screenshot ready to go. Clicking the image or the download button will download the image.
+Screenshots are also automatically saved in `/screenshoot-service/public/screenshots/`.
+Each adaptive view is stored in their own folder. 
+File names are generated based off of the "Page name" in Axure.
+
 Use the ••• menu to adjust the size and settings of your screenshots.
 
 ![Use the ••• menu to adjust the size and settings of your screenshots.](readme_assets/preview_settings.png) 
 
 You'll see your browser load another localhost page. That kicks off the node process to start taking screen shots. Once you're done with the screenshots you can happily close that window. Sometimes I'll keep that window open as I'm working on quick changes to get options of the same screen quickly.
 
-Screenshots are saved in `/screenshoot-service/public/screenshots/`.
-Each adaptive view is stored in their own folder. 
-File names are generated based off of the "Page name" in Axure.
 
 
 ## Errors
