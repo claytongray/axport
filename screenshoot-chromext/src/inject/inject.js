@@ -159,7 +159,7 @@ chrome.extension.sendMessage({}, function(response) {
 						+ '</li>');
 
 					// Add our icon
-					var imgURL = chrome.extension.getURL("images/screenshot-icon.svg");
+					var imgURL = chrome.extension.getURL("images/export_16.png");
 					$('#screenshoot-button').css({'background-image': "url("+imgURL+")"});
 
 					// add settings to the "..." dropdown
@@ -196,7 +196,7 @@ chrome.extension.sendMessage({}, function(response) {
 						+ '</div>');
 
 					// Add our icons
-					var ssIcon = chrome.extension.getURL("images/screenshot-icon.svg");
+					var ssIcon = chrome.extension.getURL("images/export_16.png");
 					$('#screenshoot-button-icon').css({'background-image': "url("+ssIcon+")"});
 					var ssGearIcon = chrome.extension.getURL("images/screenshot-gear-icon.svg");
 					$('#screenshoot-toggle-settings-icon').css({'background-image': "url("+ssGearIcon+")"});

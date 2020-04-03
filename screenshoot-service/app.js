@@ -60,7 +60,7 @@ async function screenshot_a_link(options) {
     var viewport = options.viewport;
     var fullPage = options.fullPage;
     var waitTime = options.waitTime;
-    var prototypePassword = options.prototypePassword;
+    var prototypePassword = options.prototypePassword ? options.prototypePassword : "";
     var axureVersion = options.axureVersion;
     var path = "public/screenshots/"
 
@@ -76,6 +76,111 @@ async function screenshot_a_link(options) {
 
     // launch the browser.
     let browser = await puppeteer.launch({ headless: true });
+    // let browser = await puppeteer.launch({ headless: false });
+
+
+
+
+    let previewPage = await browser.newPage();
+    await previewPage.goto(secretLink);
+    await previewPage.waitForSelector('div[data-label="Login"]');
+    // const form = await previewPage.$('div[data-label="Login"]');
+
+
+    // check to see if we're on public and asking for password
+    var documentTitle = await previewPage.evaluate(() => {
+       return document.title; 
+    });
+
+    // password protected?
+    if (documentTitle.toLowerCase().indexOf("prototype password") > -1) {
+        console.log("password protected");
+        // password protected
+        // take the first input, add the password and submit.
+        console.log("test");
+        try {
+            console.log("trying");
+
+            await previewPage.type('#u6_input', prototypePassword);
+
+            await previewPage.keyboard.press('Enter');
+
+            console.log("Enter pressed");
+
+            // await previewPage.waitForNavigation({waitUntil: 'networkidle0', timeout: 5000});
+            async function waitForResponseText(response) {
+                let text = await response.text();
+                if (text.indexOf('"success":false') > -1) {
+                    console.log(text);
+                    let found = text.match(/{[\s\S]+}/gm);
+                    // console.log(found);
+                    let res = JSON.parse(found);
+                    if (!res.success) {
+                        throw Error(res.message);
+                    }
+                }
+
+            }
+            await previewPage.on('response', response => {    
+                waitForResponseText(response).catch(err => {
+                    console.log("returnning error");
+
+                    return {
+                        status: "error",
+                        error: err,
+
+                        customMessage: "Could be an incorrect password if you're trying to use live axshare.",
+                        page: secretLink, 
+                        filename: secretLink, 
+                        time: "generationTime", 
+                        fullPage: fullPage,
+                        prototypePassword: prototypePassword
+                    }
+
+                    browser.close();
+
+                });
+            });
+            // let RESPONSE = await previewPage.on('response');
+            // console.log(await response.text());
+
+
+            // let passwordResponse = await previewPage.waitForResponse("https://share.axure.com/prototype/dologin/");
+            // let responseText = await passwordResponse.text();
+            // console.log(responseText);
+
+            // console.log("network idle");
+
+            // await previewPage.evaluate((password) => { 
+            //     document.querySelector('div[data-label="Login"]').click();
+            // }, prototypePassword);
+
+            await console.log("wait for waitForNavigation");
+            await previewPage.waitForNavigation({waitUntil: 'load', timeout: 5000});
+        }
+        catch (error) {
+            let generationTime = await (Date.now()-timerStart) / 1000;
+
+            return {
+                status: "error", 
+                error: error, 
+                customMessage: "Could be an incorrect password if you're trying to use live axshare.",
+                page: secretLink, 
+                filename: secretLink, 
+                time: generationTime, 
+                fullPage: fullPage,
+                prototypePassword: prototypePassword
+            };
+
+            await browser.close();
+
+        }
+
+    }
+
+
+
+
    
     // cycle through all viewports
     for (let i = 0; i < viewports.length; i++) {
