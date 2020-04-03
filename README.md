@@ -1,19 +1,25 @@
 ![Chrome Output](readme_assets/preview_multiple.png)
 
-# Axure Screenshoot
+# Axport for Axure Prototypes
+## Easily download screens and states as images
 
-Take quick single or multiple adaptive view screenshots with headless Chromium.
+Super fast image export for one or multiple screens in axure.
+
  **Note:** This is not a perfect solution. Sometimes you may want to capture screens manually or by using the Screen Capture plugin in chrome. I've found these methods take a while when doing many screenshots and are hard to keep consistent. 
 
 ## Features
-  * Single click screenshots from the Axure RP8 web preview page
+  * Single click screenshots from the local Axure Preview in Chrome
   * Take screenshots with multiple viewport sizes at the same time
-  * Smart full-page screenshots that measure the page and then resizes the viewport based on the elements on the page.
-  * Screenshots take in account any global variables set on previous pages
-  * File naming based on page name in Axure
+  * Smart full-page screenshots that measure the page and then resizes the viewport based on the elements on the page
+  * Screenshots take in account any global variables to capture your unique states
+  * File naming based on page name in sitemap
   * Set a custom wait time to allow for any page load animations
-  * Jumps the left menu to the current page on load for long left site maps
-
+  
+## Compatibility (at least what I've used it on)
+  * Axure RP 9
+  * Axure RP 8 (Should work, haven't tested in a while)
+  * Chrome
+  * macOS
 
 ## Getting Started
 
